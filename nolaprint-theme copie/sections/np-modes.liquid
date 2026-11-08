@@ -1,0 +1,61 @@
+{%- liquid
+  assign s = section.settings
+  # « Votre photo » : toujours l'onglet photo de la fiche du mug
+  assign blanche_url = routes.root_url | append: '#votre-photo'
+-%}
+<section class="block" id="deux-facons"><div class="wrap">
+  <div class="section-head"><div>
+    {%- if s.eyebrow != blank -%}<p class="eyebrow">{{ s.eyebrow | escape }}</p>{%- endif -%}
+    <h2>{{ s.heading | escape }}</h2></div>
+    {%- if s.text != blank -%}<p class="muted np-head-text">{{ s.text | escape }}</p>{%- endif -%}
+  </div>
+  <div class="np-modes-grid">
+    <article class="np-mode-card">
+      <div class="np-mode-art">
+        <img src="{{ 'np2-ex-mug-a-mamie-base-s.jpg' | asset_url }}" alt="Mug personnalisé pour Mamie, une fleur de naissance par prénom" width="480" height="480" loading="lazy">
+        <span class="np-mode-tag">Vos prénoms ✎</span>
+      </div>
+      <div class="np-mode-body">
+        <p class="np-mode-kicker">Option 1</p>
+        <h3>{{ s.design_title | escape }}</h3>
+        <ul class="ticks">
+          <li>Une fleur de naissance (ou un ornement de Noël) par prénom</li>
+          <li>Pour Maman, Papa, Mamie, Papy, un couple ou toute la famille, chacun dans ses couleurs</li>
+          <li>Un titre, jusqu'à 6 prénoms et une phrase, si vous le souhaitez</li>
+        </ul>
+        <a class="btn btn-primary" href="#designs" data-scroll="designs">Voir les illustrations</a>
+      </div>
+    </article>
+    <article class="np-mode-card np-mode-libre">
+      <div class="np-mode-art">
+        <img src="{{ 'np-mug-vierge-s.jpg' | asset_url }}" alt="Mug blanc vierge, prêt à recevoir votre photo" width="480" height="480" loading="lazy">
+        <span class="np-upload-badge" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M12 16V5m0 0l-4 4m4-4l4 4M5 15v3a2 2 0 002 2h10a2 2 0 002-2v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Votre photo</span>
+      </div>
+      <div class="np-mode-body">
+        <p class="np-mode-kicker">Option 2</p>
+        <h3>{{ s.libre_title | escape }}</h3>
+        <ul class="ticks">
+          <li>Votre photo ou votre dessin : JPG, PNG ou HEIC (iPhone)</li>
+          <li>Vous la placez et la zoomez vous-même, sur toute la surface ou dans un calque : sapin, étoile, rond, ovale, cœur</li>
+          <li>Un texte en plus, si vous voulez</li>
+        </ul>
+        <a class="btn btn-primary" href="{{ blanche_url }}">Partir de ma photo</a>
+      </div>
+    </article>
+  </div>
+</div></section>
+
+{% schema %}
+{
+  "name": "Deux façons",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Surtitre", "default": "Deux façons de personnaliser" },
+    { "type": "text", "id": "heading", "label": "Titre H2", "default": "Notre illustration, ou votre photo" },
+    { "type": "text", "id": "text", "label": "Texte", "default": "Dans les deux cas, vous voyez votre cadeau avant de commander." },
+    { "type": "text", "id": "design_title", "label": "Titre option 1", "default": "Nos illustrations peintes, à vos prénoms" },
+    { "type": "text", "id": "libre_title", "label": "Titre option 2", "default": "La page blanche, avec votre photo" }
+  ],
+  "presets": [{ "name": "Deux façons de personnaliser" }]
+}
+{% endschema %}

@@ -1,0 +1,14 @@
+{
+  "sections": {
+    "main": {
+      "type": "np-page-content",
+      "settings": {
+        "heading": "Cookies",
+        "body": "<p>Les cookies nécessaires (panier, session, sécurité du paiement) sont toujours actifs. Les cookies de mesure d'audience et de publicité ne sont déposés qu'avec votre accord, que vous pouvez refuser aussi simplement qu'accepter et retirer à tout moment.</p><p>Tout est détaillé dans notre <a href=\"/pages/confidentialite#cookies\">politique de confidentialité</a>.</p><p><button class=\"btn btn-ghost\" type=\"button\" data-np-cookies>Gérer mes cookies</button></p>"
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

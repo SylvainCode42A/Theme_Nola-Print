@@ -1,0 +1,40 @@
+<div class="trust"><div class="wrap">
+  {%- for block in section.blocks -%}
+    <div class="trust-item" {{ block.shopify_attributes }}>
+      <span class="trust-ico">
+        {%- case block.settings.icon -%}
+          {%- when 'eye' -%}<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+          {%- when 'eu' -%}<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          {%- when 'truck' -%}<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="17.5" r="1.8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          {%- when 'lock' -%}<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 018 0v3" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          {%- when 'box' -%}<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          {%- else -%}<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6l8-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8.5 12l2.5 2.5 4.5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        {%- endcase -%}
+      </span>
+      <span><b>{{ block.settings.title | escape }}</b>{{ block.settings.text | escape }}</span>
+    </div>
+  {%- endfor -%}
+</div></div>
+
+{% schema %}
+{
+  "name": "Réassurance NolaPrint",
+  "tag": "div",
+  "max_blocks": 4,
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Argument",
+      "settings": [
+        { "type": "select", "id": "icon", "label": "Icône", "default": "eye", "options": [
+          { "value": "eye", "label": "Œil" }, { "value": "eu", "label": "Europe" },
+          { "value": "box", "label": "Colis" }, { "value": "shield", "label": "Bouclier" },
+          { "value": "truck", "label": "Camion" }, { "value": "lock", "label": "Cadenas" } ] },
+        { "type": "text", "id": "title", "label": "Titre", "default": "Aperçu exact" },
+        { "type": "text", "id": "text", "label": "Texte", "default": "Ce que vous voyez est imprimé" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Réassurance NolaPrint", "blocks": [{ "type": "item" }] }]
+}
+{% endschema %}

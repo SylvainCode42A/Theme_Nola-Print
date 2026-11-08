@@ -1,0 +1,825 @@
+{%- comment -%}
+  Fiche produit NolaPrint, Noël 2026 (décisions 13, 14, 15).
+  Un produit par objet et par gabarit : A (un symbole au choix par prénom), B (la table du goûter), page blanche.
+  Variantes : Destinataire (6) × Texte (Sans texte / Avec texte), Forme (6) en plus sur le bois.
+  Aucun texte n'est dessiné dans le navigateur : l'aperçu vient du serveur (réglage np_apercu_url,
+  contrat « Contrat API aperçu NolaPrint ») ; sans serveur, l'image d'exemple de la variante.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign current_variant = product.selected_or_first_available_variant
+  capture np_type
+    render 'np-type', product: product
+  endcapture
+  assign np_type = np_type | strip
+  assign gab = ''
+  if product.tags contains 'np-gabarit-a'
+    assign gab = 'A'
+  elsif product.tags contains 'np-gabarit-b'
+    assign gab = 'B'
+  elsif product.tags contains 'np-blanche'
+    assign gab = 'blanche'
+  endif
+  # Ancien produit (mug-personnalise…, tag d'objet sans tag de gabarit) : fiche du gabarit A, sans variante de destinataire
+  assign ancien = false
+  if gab == '' and np_type != blank
+    assign gab = 'A'
+    assign ancien = true
+  endif
+  # Gabarit « Votre photo » (templates/product.image.json, lien ?view=image) : la page de personnalisation avec photo
+  if section.settings.mode_image and np_type != blank
+    assign gab = 'blanche'
+  endif
+  # Onglets « Nos illustrations » / « Votre photo »
+  capture h_illus
+    render 'np-handle', objet: np_type, gabarit: 'A'
+  endcapture
+  capture h_photo
+    render 'np-handle', objet: np_type, gabarit: 'blanche'
+  endcapture
+  assign h_illus = h_illus | strip
+  assign h_photo = h_photo | strip
+  assign url_illus = product.url
+  if ancien == false and all_products[h_illus].id
+    assign url_illus = all_products[h_illus].url
+  endif
+  if ancien or product.tags contains 'np-gabarit-a'
+    assign url_illus = product.url
+  endif
+  assign url_photo = '/products/' | append: h_illus | append: '?view=image'
+  if all_products[h_photo].id
+    assign url_photo = all_products[h_photo].url
+  endif
+  assign gab_l = gab | downcase
+  assign col = collection
+  if col == blank
+    assign col = product.collections.first
+  endif
+
+  case np_type
+    when 'mug'
+      assign lede = s.lede_mug
+      assign safety = s.safety_mug
+      assign ship_days = s.ship_mug
+      assign deliver_days = s.deliver_mug
+      assign noel = s.noel_mug
+      assign lot_off = settings.np_lot_off_mug
+      assign noun = 'mug'
+      assign nouns = 'mugs'
+    when 'verre'
+      assign lede = s.lede_verre
+      assign safety = s.safety_verre
+      assign ship_days = s.ship_verre
+      assign deliver_days = s.deliver_verre
+      assign noel = s.noel_verre
+      assign lot_off = settings.np_lot_off_verre
+      assign noun = 'boule'
+      assign nouns = 'boules'
+    when 'bois'
+      assign lede = s.lede_bois
+      assign safety = s.safety_bois
+      assign ship_days = s.ship_bois
+      assign deliver_days = s.deliver_bois
+      assign noel = s.noel_bois
+      assign lot_off = settings.np_lot_off_bois
+      assign noun = 'décoration'
+      assign nouns = 'décorations'
+  endcase
+
+  # Options de variante : Forme (bois), Destinataire, Texte
+  assign opt_forme = nil
+  assign opt_dest = nil
+  assign opt_texte = nil
+  for opt in product.options_with_values
+    assign oname = opt.name | downcase
+    if oname contains 'forme'
+      assign opt_forme = opt
+    elsif oname contains 'destinataire'
+      assign opt_dest = opt
+    elsif oname contains 'texte' or oname contains 'personnalisation'
+      assign opt_texte = opt
+    endif
+  endfor
+  assign idx_forme = -1
+  assign idx_dest = -1
+  assign idx_texte = -1
+  if opt_forme
+    assign idx_forme = opt_forme.position | minus: 1
+  endif
+  if opt_dest
+    assign idx_dest = opt_dest.position | minus: 1
+  endif
+  if opt_texte
+    assign idx_texte = opt_texte.position | minus: 1
+  endif
+
+  # Point de départ : la variante choisie (?variant=), sinon la première (Mamie, cœur, sans texte)
+  assign dest_now = 'mamie'
+  if opt_dest
+    assign dest_now = opt_dest.selected_value | downcase
+  endif
+  assign forme_now = 'coeur'
+  assign forme_label = ''
+  if opt_forme
+    assign forme_label = opt_forme.selected_value
+    assign forme_now = forme_label | downcase | replace: 'œ', 'oe' | replace: 'é', 'e' | replace: 'è', 'e' | split: ' ' | first
+  endif
+
+  # Déclinaison (décision 15) : mug A fleurs avec ornements au choix, mug B de base, boule et bois de Noël
+  assign decl = 'noel'
+  assign decls = 'noel'
+  if np_type == 'mug'
+    assign decl = 'base'
+    assign decls = 'base'
+    if gab == 'A'
+      assign decls = 'base,noel'
+    endif
+  endif
+  if gab == 'blanche'
+    assign decl = 'base'
+    assign decls = 'base'
+  endif
+
+  # Prix : sans texte, avec texte (+1 € dès qu'un champ est rempli)
+  assign base_price = product.price_min
+  assign text_price = 0
+  if opt_texte
+    for v in product.variants
+      assign tv = v.options[idx_texte] | downcase
+      if tv contains 'avec'
+        if text_price == 0 or v.price < text_price
+          assign text_price = v.price
+        endif
+      endif
+    endfor
+  endif
+  if text_price == 0
+    assign text_price = base_price | plus: settings.np_text_extra
+  endif
+  assign text_extra = text_price | minus: base_price
+
+  # Lot de 3 (décision 12)
+  # Plus de choix « 1 article / lot de 3 » sur la fiche : la remise s'applique dans le panier dès 3 articles, tous objets confondus
+  assign lots_on = false
+  assign modes_ici = false
+  if ancien
+    assign modes_ici = true
+  endif
+  assign lot_ref = base_price | times: 3
+  assign lot_save = lot_off | times: 3
+  assign lot_price = lot_ref | minus: lot_save
+
+  # Trio de Noël
+  assign trio_off = 0
+  if settings.np_trio_enabled
+    assign trio_off = settings.np_trio_off | default: 0
+  endif
+
+  # Livraison et Noël
+  assign ship_price = settings.np_ship_price | default: 490
+  assign free_ship = settings.np_free_ship | default: 6000
+  assign today = 'now' | date: '%Y-%m-%d'
+  assign show_noel = false
+  assign noel_label = ''
+  if noel != blank and today <= noel
+    assign show_noel = true
+    assign mois = 'janv.,févr.,mars,avr.,mai,juin,juil.,août,sept.,oct.,nov.,déc.' | split: ','
+    assign nm = noel | date: '%-m' | minus: 1
+    assign noel_label = noel | date: '%-d' | append: ' ' | append: mois[nm]
+  endif
+
+  # Image de départ : exemple de la variante (gabarits A et B), objet vierge (page blanche, autres formes)
+  if forme_now == 'coeur'
+    assign vierge_file = 'np-' | append: np_type | append: '-vierge.jpg'
+  else
+    assign vierge_file = 'np-bois-' | append: forme_now | append: '-vierge.jpg'
+  endif
+  assign base_file = vierge_file
+  if gab == 'A' or gab == 'B'
+    if np_type != 'bois' or forme_now == 'coeur'
+      assign base_file = 'np2-ex-' | append: np_type | append: '-' | append: gab_l | append: '-' | append: dest_now | append: '-' | append: decl | append: '.jpg'
+    endif
+  endif
+  assign dest_ids = 'maman,papa,mamie,papy,couple,famille' | split: ','
+  assign decl_list = decls | split: ','
+-%}
+<div class="wrap">
+  <nav class="crumbs" aria-label="Fil d'Ariane"><a href="{{ routes.root_url }}">Accueil</a> /{% if col %} <a href="{{ col.url }}">{{ col.title | escape }}</a> /{% endif %} <span aria-current="page">{{ product.title | escape }}</span></nav>
+
+  {%- if np_type != blank and gab != blank -%}
+  {%- assign step = 0 -%}
+  <div class="pdp np-pdp" data-np-pdp data-type="{{ np_type }}" data-gabarit="{{ gab }}">
+    <div class="np-gallery">
+      <div class="pdp-art np-stage-wrap">
+        <div class="np-stage" data-np-stage data-type="{{ np_type }}"{% if np_type == 'mug' %} data-np-3d="{{ 'np-mug3d.js' | asset_url }}"{% endif %}>
+          <img class="np-base" src="{{ base_file | asset_url }}" alt="{{ product.title | escape }}, aperçu" width="1000" height="1000" fetchpriority="high" data-np-base>
+          <canvas class="np-plaque" width="1000" height="1000" hidden aria-hidden="true" data-np-plaque></canvas>
+          <span class="np-apercu-etat" data-np-apercu-etat hidden></span>
+        </div>
+        {%- if opt_forme -%}<span class="np-stage-note" data-np-shape-note>Forme : {{ forme_label | escape }}</span>{%- endif -%}
+      </div>
+      <p class="np-gallery-hint" data-np-apercu-note>{% if settings.np_apercu_url == blank %}Aperçu de l'illustration : votre texte est ajouté à l'impression, exactement comme vous l'avez saisi.{% else %}Couleurs indicatives : le rendu peut varier légèrement selon les écrans.{% endif %}</p>
+    </div>
+
+    <div class="np-buy">
+      {%- if product.type != blank -%}<p class="eyebrow">{{ product.type | escape }}</p>{%- endif -%}
+      <h1 class="np-title">{{ product.title | escape }}</h1>
+      <div class="np-price-line">
+        <span class="price" data-np-price>{{ current_variant.price | money }}</span>
+        <s class="np-compare" data-np-compare{% unless current_variant.compare_at_price > current_variant.price %} hidden{% endunless %}>{{ current_variant.compare_at_price | money }}</s>
+        {%- if s.tax_note != blank -%}<span class="np-tax">{{ s.tax_note | escape }}</span>{%- endif -%}
+      </div>
+      {%- if lede != blank -%}<p class="np-lede">{{ lede | escape }}</p>{%- endif -%}
+
+      {%- for block in section.blocks -%}
+        {%- if block.type == '@app' -%}<div class="np-app-block">{% render block %}</div>{%- endif -%}
+      {%- endfor -%}
+
+      {%- form 'product', product, class: 'np-perso', id: 'np-product-form', novalidate: 'novalidate' -%}
+        <input type="hidden" name="id" value="{{ current_variant.id }}" data-np-variant>
+        <div hidden data-np-props></div>
+        {%- liquid
+          if np_type == 'mug'
+            assign label_a = 'Le jardin'
+          else
+            assign label_a = 'Le sapin'
+          endif
+          capture h_b
+            render 'np-handle', objet: np_type, gabarit: 'B'
+          endcapture
+          assign h_b = h_b | strip
+          assign url_b = all_products[h_b].url
+        -%}
+        <nav class="np-modes-tabs" aria-label="Façon de personnaliser">
+          {%- if modes_ici -%}
+            <button type="button" class="np-mode-tab{% if gab == 'A' %} is-on{% endif %}" data-np-mode="A">{{ label_a }}</button>
+            <button type="button" class="np-mode-tab{% if gab == 'blanche' %} is-on{% endif %}" data-np-mode="blanche">Votre photo</button>
+          {%- else -%}
+            <a class="np-mode-tab{% if gab != 'blanche' %} is-on{% endif %}" href="{{ url_illus }}">{{ label_a }}</a>
+            <a class="np-mode-tab{% if gab == 'blanche' %} is-on{% endif %}" href="{{ url_photo }}">Votre photo</a>
+          {%- endif -%}
+        </nav>
+
+        {%- if lots_on -%}
+          {%- if gab == 'blanche' -%}
+            {%- capture one_img -%}np-{{ np_type }}-vierge-t.jpg{%- endcapture -%}
+          {%- else -%}
+            {%- capture one_img -%}np2-ex-{{ np_type }}-{{ gab_l }}-{{ dest_now }}-{{ decl }}-s.jpg{%- endcapture -%}
+          {%- endif -%}
+          {%- capture lot_img -%}np2-offre-lot-{{ np_type }}-t.jpg{%- endcapture -%}
+          <fieldset class="np-offer" data-np-offer>
+            <legend class="sr">Formule</legend>
+            <label class="np-offer-opt">
+              <input type="radio" name="np_offer" value="1" checked data-np-offer-qty="1">
+              <img src="{{ one_img | asset_url }}" alt="" width="200" height="200" loading="lazy">
+              <span><b>1 {{ noun }}</b><small>{{ base_price | money }}</small></span>
+            </label>
+            <label class="np-offer-opt">
+              <input type="radio" name="np_offer" value="3" data-np-offer-qty="3">
+              <img src="{{ lot_img | asset_url }}" alt="" width="240" height="240" loading="lazy">
+              <span><b>Lot de 3 {{ nouns }}</b><small>{{ lot_price | money }} au lieu de {{ lot_ref | money }}</small></span>
+              <em class="np-offer-save">−{{ lot_save | money }}</em>
+            </label>
+          </fieldset>
+          <p class="np-offer-note" data-np-lot-note hidden>Chaque {{ noun }} du lot a son destinataire{% if opt_forme %}, sa forme{% endif %} et son texte : personnalisez-les l'un après l'autre. Vous pouvez mélanger nos illustrations et votre image ; la remise s'applique dans le panier, dès 3 {{ nouns }}.</p>
+        {%- endif -%}
+
+        {%- if opt_dest or modes_ici or gab == 'A' or gab == 'B' -%}
+          {%- assign step = step | plus: 1 -%}
+          <fieldset class="np-group" data-np-dest-group{% if gab == 'blanche' %} hidden{% endif %}>
+            <legend class="np-step"><span>{{ step }}</span><b>Pour qui ?</b><em class="np-lot-pill" data-np-lot-pill hidden>Article <b data-np-lot-n>1</b> sur 3</em></legend>
+            <div class="np-chiprow" role="radiogroup" aria-label="Destinataire">
+              {%- for d in dest_ids -%}
+                <label class="np-chipopt"><input type="radio" name="np_dest" value="{{ d }}"{% if d == dest_now %} checked{% endif %} data-np-dest><span>{%- render 'np-ref', mode: 'dest', id: d -%}</span></label>
+              {%- endfor -%}
+            </div>
+            {%- if np_type == 'mug' -%}
+              <p class="np-alt-decl"><a href="#" data-np-decl-link></a></p>
+            {%- endif -%}
+          </fieldset>
+        {%- endif -%}
+
+        {%- if opt_forme -%}
+          {%- assign step = step | plus: 1 -%}
+          <fieldset class="np-shapes">
+            <legend class="np-step"><span>{{ step }}</span><b>Choisissez la forme</b>{% unless opt_dest %}<em class="np-lot-pill" data-np-lot-pill hidden>Article <b data-np-lot-n>1</b> sur 3</em>{% endunless %}</legend>
+            <div class="np-shape-row">
+              {%- for value in opt_forme.values -%}
+                {%- assign vname = value.name | default: value -%}
+                {%- assign shape_key = vname | downcase | replace: 'œ', 'oe' | replace: 'é', 'e' | replace: 'è', 'e' | split: ' ' | first -%}
+                <label class="np-shape-opt"><input type="radio" name="np_shape" value="{{ vname | escape }}"{% if shape_key == forme_now %} checked{% endif %} data-np-shape="{{ vname | escape }}" data-np-shape-key="{{ shape_key }}">
+                  {%- render 'np-shape-icon', shape: vname -%}<span>{{ vname | escape }}</span></label>
+              {%- endfor -%}
+            </div>
+          </fieldset>
+        {%- endif -%}
+
+        {%- if gab == 'blanche' or modes_ici -%}
+          {%- assign step = step | plus: 1 -%}
+          <fieldset class="np-group np-image-group" data-np-image-group{% unless gab == 'blanche' %} hidden{% endunless %}>
+            <legend class="np-step"><span>{{ step }}</span><b>Votre image</b>{% unless opt_forme %}<em class="np-lot-pill" data-np-lot-pill hidden>Article <b data-np-lot-n>1</b> sur 3</em>{% endunless %}</legend>
+            <label class="np-drop" for="npFile" data-np-drop>
+              <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5m0 0l-4 4m4-4l4 4M5 15v3a2 2 0 002 2h10a2 2 0 002-2v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span><b data-np-drop-label>Importer une photo</b><small>JPG, PNG ou HEIC (iPhone) · 20 Mo au plus</small></span>
+            </label>
+            <input class="np-file" type="file" id="npFile" name="properties[Votre image]" accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif" data-np-file>
+            <p class="np-msg" data-np-file-msg aria-live="polite"></p>
+
+            <div class="np-fond" data-np-fond hidden>
+              <span class="np-label">Fond de la photo</span>
+              <div class="np-chiprow" role="radiogroup" aria-label="Fond de la photo">
+                <label class="np-chipopt"><input type="radio" name="np_fond" value="garder" checked data-np-fond-mode><span>Garder le fond</span></label>
+                <label class="np-chipopt"><input type="radio" name="np_fond" value="auto" data-np-fond-mode><span>Retirer le fond</span></label>
+                <label class="np-chipopt"><input type="radio" name="np_fond" value="uni" data-np-fond-mode><span>Retirer un fond uni</span></label>
+              </div>
+              <label class="np-fond-tol" data-np-fond-tol hidden><span>Tolérance</span><input type="range" min="5" max="120" step="1" value="40" aria-label="Tolérance du fond uni" data-np-fond-tol-in></label>
+              <p class="np-msg" data-np-fond-msg aria-live="polite">« Retirer le fond » détoure automatiquement la personne, l'animal ou l'objet ; « fond uni » efface la couleur du bord de la photo (mur, ciel, drap…).</p>
+            </div>
+
+            <div class="np-formes-img" role="radiogroup" aria-label="Forme de l'image">
+              <span class="np-label">Calque : la forme de votre photo</span>
+              <div class="np-chiprow">
+                <label class="np-chipopt"><input type="radio" name="np_forme_img" value="tout" checked data-np-forme-img><span>Toute la surface</span></label>
+                <label class="np-chipopt"><input type="radio" name="np_forme_img" value="sapin" data-np-forme-img><span>Sapin</span></label>
+                <label class="np-chipopt"><input type="radio" name="np_forme_img" value="etoile" data-np-forme-img><span>Étoile</span></label>
+                <label class="np-chipopt"><input type="radio" name="np_forme_img" value="rond" data-np-forme-img><span>Rond</span></label>
+                <label class="np-chipopt"><input type="radio" name="np_forme_img" value="ovale" data-np-forme-img><span>Ovale</span></label>
+                <label class="np-chipopt"><input type="radio" name="np_forme_img" value="coeur" data-np-forme-img><span>Cœur</span></label>
+              </div>
+            </div>
+
+            <div class="np-crop" data-np-crop hidden>
+              <div class="np-crop-frame" data-np-crop-frame>
+                <img alt="Votre image, à placer dans la forme" width="1" height="1" draggable="false" data-np-crop-img>
+                <svg class="np-crop-mask" aria-hidden="true" data-np-crop-mask></svg>
+              </div>
+              <div class="np-crop-tools">
+                <button type="button" class="np-crop-btn" data-np-crop-step="-1" aria-label="Dézoomer">−</button>
+                <input type="range" min="-1" max="1" step="0.01" value="0" aria-label="Taille de la photo" data-np-crop-zoom>
+                <button type="button" class="np-crop-btn" data-np-crop-step="1" aria-label="Zoomer">+</button>
+              </div>
+              <p class="np-crop-hint">Faites glisser la photo pour la placer. Le curseur la rapetisse (à gauche) ou l'agrandit (à droite) ; au milieu, elle tient entière dans la zone.</p>
+            </div>
+            <label class="check"><input type="checkbox" data-np-rights><span>Je certifie avoir les droits sur cette image (photo prise par moi, personnes représentées d'accord) et j'accepte qu'elle soit imprimée telle quelle.</span></label>
+          </fieldset>
+        {%- endif -%}
+
+        {%- assign step = step | plus: 1 -%}
+        <fieldset class="np-group np-texte" data-np-texte>
+          <legend class="np-step"><span>{{ step }}</span><b>Votre texte</b><small class="np-step-note">facultatif{% if text_extra > 0 %} · +{{ text_extra | money_without_trailing_zeros }} dès qu'un champ est rempli{% endif %}</small></legend>
+
+          <div class="field" data-np-titre>
+            <div class="np-label-row"><label for="npTitreSel" data-np-titre-label>Titre</label><span class="np-count"><span data-np-titre-count>0</span>/30</span></div>
+            <input class="input" id="npTitreSel" maxlength="30" autocomplete="off" placeholder="Ex. Mamie" data-np-titre-libre>
+            <p class="np-titre-phrase" data-np-titre-phrase></p>
+            <div class="np-two" data-np-titre-deux hidden><select class="input" aria-label="Premier surnom" data-np-surnom="1"></select><span>et</span><select class="input" aria-label="Second surnom" data-np-surnom="2"></select></div>
+            <input class="input" maxlength="16" autocomplete="family-name" placeholder="Votre nom de famille" aria-label="Nom de famille" data-np-titre-famille hidden>
+          </div>
+
+          <div class="field np-prenoms" data-np-prenoms>
+            <div class="np-label-row"><span class="np-label">Prénoms</span><span class="np-count">jusqu'à 6 · 15 caractères chacun</span></div>
+            <ol class="np-prenom-list" data-np-prenom-list></ol>
+            <button type="button" class="np-add-line" data-np-prenom-add>+ Ajouter un prénom</button>
+            {%- if np_type == 'mug' -%}
+              <label class="check np-mois-opt" data-np-mois-opt><input type="checkbox" checked data-np-mois><span>Écrire le mois de naissance à côté de chaque prénom (« Léa · juin »)</span></label>
+            {%- endif -%}
+            {%- if modes_ici or gab == 'A' -%}
+              <details class="np-fleurs" data-np-fleurs-liste>
+                <summary>Les fleurs de naissance, mois par mois</summary>
+                {%- liquid
+                  assign f_ids = 'oeillet,violette,jonquille,marguerite,muguet,rose,pied-dalouette,tournesol,aster,souci,chrysantheme,houx' | split: ','
+                  assign f_noms = "œillet|violette|jonquille|marguerite|muguet|rose|pied-d'alouette|tournesol|aster|souci|chrysanthème|houx" | split: '|'
+                  assign f_mois = 'Janvier,Février,Mars,Avril,Mai,Juin,Juillet,Août,Septembre,Octobre,Novembre,Décembre' | split: ','
+                -%}
+                <ul>
+                  {%- for fid in f_ids -%}
+                    {%- capture fimg -%}np2-sym-{{ fid }}.png{%- endcapture -%}
+                    <li><img src="{{ fimg | asset_url }}" alt="" width="28" height="28" loading="lazy"><b>{{ f_mois[forloop.index0] }}</b> {{ f_noms[forloop.index0] }}</li>
+                  {%- endfor -%}
+                </ul>
+              </details>
+            {%- endif -%}
+          </div>
+          <template data-np-prenom-tpl>
+            <li class="np-prenom-row">
+              <input class="input" maxlength="15" autocomplete="off" data-np-prenom>
+              {%- if modes_ici or gab == 'A' -%}<span class="np-sym-pick"><img class="np-sym-img" src="" alt="" width="40" height="40" data-np-symbole-img><select class="input np-sym-sel" data-np-symbole></select></span>{%- endif -%}
+              <button type="button" class="np-del" aria-label="Retirer ce prénom" data-np-prenom-del>×</button>
+            </li>
+          </template>
+
+          <div class="field" data-np-phrase-field>
+            <div class="np-label-row"><label for="npPhrase">Phrase</label><span class="np-count"><span data-np-phrase-count>0</span>/40</span></div>
+            <input class="input" id="npPhrase" maxlength="40" autocomplete="off" placeholder="Ex. Avec tout notre amour" data-np-phrase>
+          </div>
+
+          <fieldset class="np-colors">
+            <legend class="np-label">Couleur du texte <span class="np-label-note" data-np-couleur-nom></span></legend>
+            <div class="np-color-row" data-np-couleurs></div>
+          </fieldset>
+          <fieldset class="np-colors" data-np-bg-field hidden>
+            <legend class="np-label">Couleur de fond <span class="np-label-note" data-np-bg-nom></span></legend>
+            <div class="np-color-row" data-np-bgs></div>
+          </fieldset>
+          <p class="np-msg" data-np-alertes aria-live="polite"></p>
+        </fieldset>
+
+        {%- assign step = step | plus: 1 -%}
+        <div class="np-step"><span>{{ step }}</span><b>Vérifiez et ajoutez au panier</b></div>
+        <p class="accent-note" data-np-accent-note><span aria-hidden="true">✎</span><span>Nous imprimons <b>exactement</b> ce que vous saisissez : vérifiez les accents (é, è, ë, ç), les majuscules et les traits d'union.</span></p>
+        <label class="check"><input type="checkbox" data-np-check><span data-np-check-label>J'ai vérifié l'aperçu et l'orthographe : c'est ce que je veux voir imprimé.</span></label>
+        <div class="buy-row">
+          <div class="field np-qty-field" data-np-qty-field><label class="sr" for="np-qty">Quantité</label><input class="input" type="number" id="np-qty" name="quantity" value="1" min="1" max="20"></div>
+          <button class="btn btn-primary np-add" type="submit" data-np-add{% unless current_variant.available %} disabled{% endunless %}>
+            <span data-np-add-label>{% if current_variant.available %}Ajouter au panier{% else %}Épuisé{% endif %}</span><span class="np-add-price"> · <span data-np-price>{{ current_variant.price | money }}</span></span>
+          </button>
+        </div>
+        <p class="np-retract" data-np-retract>{{ s.retract_free | escape }}</p>
+        <p class="np-form-error" role="alert" hidden data-np-error></p>
+      {%- endform -%}
+
+      {%- if shop.enabled_payment_types.size > 0 -%}
+        <ul class="np-pay np-pay-pdp" aria-label="Moyens de paiement acceptés">
+          {%- for type in shop.enabled_payment_types -%}<li>{{ type | payment_type_svg_tag: class: 'np-pay-ico' }}</li>{%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      <div class="np-eta" data-np-eta data-ship="{{ ship_days | escape }}" data-deliver="{{ deliver_days | escape }}" data-cutoff="{{ s.cutoff | default: 14 }}" data-jours="calendaires">
+        <p class="np-eta-head">Arrivée estimée : <b data-np-eta-range>{{ deliver_days | replace: '-', ' à ' }} jours</b></p>
+        <ol class="np-eta-steps">
+          <li><span class="np-eta-ico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8V7a3 3 0 016 0v1" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 14l2 2 3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b data-np-eta-order>Aujourd'hui</b><small>Commande</small></li>
+          <li><span class="np-eta-ico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" fill="#FFFFFF" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="17.5" r="1.8" fill="#FFFFFF" stroke="currentColor" stroke-width="1.8"/></svg></span><b data-np-eta-ship>{{ ship_days | replace: '-', ' à ' }} j. ouvrés</b><small>Expédition</small></li>
+          <li><span class="np-eta-ico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 7c-1.5-3-5-3.5-5-1.5S10 7 12 7zm0 0c1.5-3 5-3.5 5-1.5S14 7 12 7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><b data-np-eta-deliver>{{ deliver_days | replace: '-', ' à ' }} jours</b><small>Livraison</small></li>
+        </ol>
+      </div>
+
+      <ul class="np-tiles" aria-label="Fabrication et livraison">
+        <li class="np-tile"><span class="np-tile-ico" aria-hidden="true">{%- render 'np-icon', name: 'box' -%}</span><b>Fait pour vous</b><span>à la commande, en Europe</span></li>
+        <li class="np-tile"><span class="np-tile-ico" aria-hidden="true">{%- render 'np-icon', name: 'truck' -%}</span><b>{{ ship_price | money }}, suivi</b><span>offerte dès {{ free_ship | money_without_trailing_zeros }}</span></li>
+        {%- if show_noel -%}<li class="np-tile" data-np-noel="{{ noel }}"><span class="np-tile-ico" aria-hidden="true">{%- render 'np-icon', name: 'tree' -%}</span><b>Pour Noël</b><span>commandez avant le {{ noel_label }}</span></li>{%- endif -%}
+      </ul>
+
+      <ul class="np-reassure">
+        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 018 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="15" r="1.4" fill="currentColor"/></svg><span><b>Paiement sécurisé</b> · vos données bancaires sont chiffrées, nous ne les voyons jamais</span></li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 01-14.3 4.9M4 12a8 8 0 0114.3-4.9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M18.5 3v4.2h-4.2M5.5 21v-4.2h4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Article abîmé ou mal imprimé</b> · refait ou remboursé, sans rien renvoyer</span></li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span><b>14 jours pour changer d'avis</b> · sur les articles sans texte</span></li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span><b>Une question ?</b> · réponse sous 48 h ouvrées</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <section class="np-info" data-np-tabs aria-label="Informations sur le produit">
+    <div class="np-tabbar" role="tablist">
+      <button type="button" role="tab" id="np-tab-desc" aria-controls="np-tp-desc" aria-selected="true">Description</button>
+      <button type="button" role="tab" id="np-tab-ship" aria-controls="np-tp-ship" aria-selected="false" tabindex="-1">Livraison et retours</button>
+      <button type="button" role="tab" id="np-tab-pay" aria-controls="np-tp-pay" aria-selected="false" tabindex="-1">Paiement sécurisé</button>
+    </div>
+    <div class="np-tabpanel rte" id="np-tp-desc" role="tabpanel" aria-labelledby="np-tab-desc">
+      {{ product.description }}
+      {%- if safety != blank or s.maker != blank -%}
+        <details class="np-acc"><summary>Sécurité du produit</summary><div class="np-acc-body">{%- if s.maker != blank -%}<p>Fabricant : {{ s.maker }}</p>{%- endif -%}{{ safety }}</div></details>
+      {%- endif -%}
+    </div>
+    <div class="np-tabpanel rte" id="np-tp-ship" role="tabpanel" aria-labelledby="np-tab-ship" hidden>{{ s.tab_ship }}</div>
+    <div class="np-tabpanel rte" id="np-tp-pay" role="tabpanel" aria-labelledby="np-tab-pay" hidden>
+      {{ s.tab_pay }}
+      {%- if shop.enabled_payment_types.size > 0 -%}
+        <ul class="np-pay np-pay-left" aria-label="Moyens de paiement acceptés">
+          {%- for type in shop.enabled_payment_types -%}<li>{{ type | payment_type_svg_tag: class: 'np-pay-ico' }}</li>{%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </div>
+  </section>
+
+  <a class="np-sticky btn btn-primary" href="#np-product-form" data-np-sticky>Personnaliser · <span data-np-price>{{ current_variant.price | money }}</span></a>
+  {%- liquid
+    assign zone_mug = 2475.0 | divided_by: 1155
+    assign f_keys = 'coeur,sapin,etoile,cloche,chaussette,ovale' | split: ','
+    assign f_boites = '211,136,577,760|221,118,553,790|199,173,601,684|195,138,605,743|229,121,533,784|222,114,543,798' | split: '|'
+    assign f_mm = '87,115|92,132|85,97|86,105|86,162|85,125' | split: '|'
+  -%}
+  <script src="{{ 'np-rendu.js' | asset_url }}" defer></script>
+  <script type="application/json" data-np-data>{
+    "type": {{ np_type | json }}, "gabarit": {{ gab | json }}, "decl": {{ decl | json }}, "decls": {{ decl_list | json }},
+    "money": {{ shop.money_format | strip_html | json }},
+    "idx": { "forme": {{ idx_forme }}, "dest": {{ idx_dest }}, "texte": {{ idx_texte }} },
+    "variants": [{%- for v in product.variants -%}{"id": {{ v.id }}, "price": {{ v.price }}, "compare": {{ v.compare_at_price | default: 0 }}, "available": {{ v.available | json }}, "options": {{ v.options | json }}}{% unless forloop.last %},{% endunless %}{%- endfor -%}],
+    "extra": {{ settings.np_text_extra | default: 100 }},
+    "apercu": {{ settings.np_apercu_url | strip | json }},
+    "ref": {% render 'np-ref', mode: 'json' %},
+    "sym_img": {{ 'np2-sym-rose.png' | asset_url | json }},
+    "asset": {{ 'np2-el-rose.png' | asset_url | json }},
+    "ancien": {{ ancien | json }},
+    "ex": {
+      {%- if gab == 'A' or gab == 'B' -%}
+        {%- for d in dest_ids -%}{%- assign outer = forloop.last -%}
+          {%- for dc in decl_list -%}
+            {%- capture f -%}np2-ex-{{ np_type }}-{{ gab_l }}-{{ d }}-{{ dc }}.jpg{%- endcapture -%}
+            "{{ d }}-{{ dc }}": {{ f | asset_url | json }}{% unless outer and forloop.last %},{% endunless %}
+          {%- endfor -%}
+        {%- endfor -%}
+      {%- endif -%}
+    },
+    "plat": {
+      {%- if gab == 'A' or gab == 'B' -%}
+        {%- for d in dest_ids -%}{%- assign outer = forloop.last -%}
+          {%- for dc in decl_list -%}
+            {%- capture f -%}np2-plat-{{ np_type }}-{{ gab_l }}-{{ d }}-{{ dc }}.{% if np_type == 'verre' %}png{% else %}jpg{% endif %}{%- endcapture -%}
+            "{{ d }}-{{ dc }}": {{ f | asset_url | json }}{% unless outer and forloop.last %},{% endunless %}
+          {%- endfor -%}
+        {%- endfor -%}
+      {%- endif -%}
+    },
+    {%- if np_type == 'bois' -%}
+    "vierge": {
+      {%- for k in f_keys -%}
+        {%- if k == 'coeur' -%}{%- assign f = 'np-bois-vierge.jpg' -%}{%- else -%}{%- assign f = 'np-bois-' | append: k | append: '-vierge.jpg' -%}{%- endif -%}
+        {{ k | json }}: {{ f | asset_url | json }}{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    },
+    "masque": {
+      {%- for k in f_keys -%}{%- capture f -%}np2-bois-{{ k }}-masque.png{%- endcapture -%}{{ k | json }}: {{ f | asset_url | json }}{% unless forloop.last %},{% endunless %}{%- endfor -%}
+    },
+    "contour": {
+      {%- for k in f_keys -%}{%- capture f -%}np2-bois-{{ k }}-contour.png{%- endcapture -%}{{ k | json }}: {{ f | asset_url | json }}{% unless forloop.last %},{% endunless %}{%- endfor -%}
+    },
+    "boite": {
+      {%- for k in f_keys -%}{{ k | json }}: [{{ f_boites[forloop.index0] }}]{% unless forloop.last %},{% endunless %}{%- endfor -%}
+    },
+    "zone": {
+      {%- for k in f_keys -%}{%- assign mm = f_mm[forloop.index0] | split: ',' -%}{%- assign zw = mm[0] | times: 1.0 -%}{{ k | json }}: {{ zw | divided_by: mm[1] | round: 4 }}{% unless forloop.last %},{% endunless %}{%- endfor -%}
+    },
+    {%- else -%}
+    "vierge": { "": {{ vierge_file | asset_url | json }} },
+    "zone": { "": {% if np_type == 'mug' %}{{ zone_mug | round: 4 }}{% else %}1{% endif %} },
+    "disque": [497.4, 493.8, 317.6],
+    {%- endif -%}
+    "retract": { "free": {{ s.retract_free | json }}, "perso": {{ s.retract_perso | json }} }
+  }</script>
+
+  {%- liquid
+    assign objs = 'mug,verre,bois' | split: ','
+    assign others = 0
+    assign trio = 0
+    assign trio_ok = true
+    for o in objs
+      capture h
+        render 'np-handle', objet: o, gabarit: 'A'
+      endcapture
+      assign h = h | strip
+      assign p = all_products[h]
+      if p.id
+        assign trio = trio | plus: p.price_min
+      else
+        assign trio_ok = false
+      endif
+      if o != np_type
+        capture h2
+          render 'np-handle', objet: o, gabarit: gab
+        endcapture
+        assign h2 = h2 | strip
+        if all_products[h2].id
+          assign others = others | plus: 1
+        endif
+      endif
+    endfor
+  -%}
+  {%- if others > 0 -%}
+    <section class="block np-related"><div class="section-head"><div><p class="eyebrow">{% if gab == 'blanche' %}Votre image, sur nos autres objets{% else %}La même illustration{% endif %}</p><h2>{{ s.related_heading | escape }}</h2>
+      {%- if trio_ok -%}<p class="muted np-head-text">Un mug, une boule et une décoration : {% if trio_off > 0 %}<b class="np-trio-price">{{ trio | minus: trio_off | money }}</b> <s class="np-compare">{{ trio | money }}</s> les trois, soit −{{ trio_off | money }}.{% else %}{{ trio | money }} les trois.{% endif %}</p>{%- endif -%}</div></div>
+      <div class="grid np-pgrid">
+        {%- for o in objs -%}
+          {%- if o != np_type -%}
+            {%- capture h2 -%}{%- render 'np-handle', objet: o, gabarit: gab -%}{%- endcapture -%}
+            {%- assign h2 = h2 | strip -%}
+            {%- assign p = all_products[h2] -%}
+            {%- if p.id -%}{%- render 'np-product-card', product: p, dest: dest_now -%}{%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      </div></section>
+  {%- endif -%}
+
+  {%- else -%}
+  {%- comment -%} Produit sans tags NolaPrint (objet et gabarit) : fiche simple. {%- endcomment -%}
+  <div class="pdp">
+    <div class="pdp-art">
+      {%- if product.featured_media -%}
+        {{ product.featured_media | image_url: width: 1100 | image_tag: loading: 'eager', fetchpriority: 'high', widths: '450, 700, 900, 1100', sizes: '(min-width: 900px) 50vw, 100vw', alt: product.featured_media.alt | default: product.title }}
+      {%- endif -%}
+    </div>
+    <div>
+      {%- if product.type != blank -%}<p class="eyebrow">{{ product.type | escape }}</p>{%- endif -%}
+      <h1 class="np-title">{{ product.title | escape }}</h1>
+      <div class="np-price-line"><span class="price">{{ current_variant.price | money }}</span>{%- if current_variant.compare_at_price > current_variant.price -%}<s class="np-compare">{{ current_variant.compare_at_price | money }}</s>{%- endif -%}{%- if s.tax_note != blank -%}<span class="np-tax">{{ s.tax_note | escape }}</span>{%- endif -%}</div>
+      {%- for block in section.blocks -%}
+        {%- if block.type == '@app' -%}<div class="np-app-block">{% render block %}</div>{%- endif -%}
+      {%- endfor -%}
+      {%- form 'product', product, class: 'form-card' -%}
+        {%- if product.has_only_default_variant -%}
+          <input type="hidden" name="id" value="{{ current_variant.id }}">
+        {%- else -%}
+          <div class="field"><label for="np-variant-2">{{ product.options | join: ' / ' | escape }}</label>
+            <select class="input" id="np-variant-2" name="id">
+              {%- for v in product.variants -%}<option value="{{ v.id }}"{% if v.id == current_variant.id %} selected{% endif %}{% unless v.available %} disabled{% endunless %}>{{ v.title | escape }} · {{ v.price | money }}</option>{%- endfor -%}
+            </select></div>
+        {%- endif -%}
+        <div class="buy-row"><button class="btn btn-primary" type="submit"{% unless current_variant.available %} disabled{% endunless %}>{% if current_variant.available %}Ajouter au panier{% else %}Épuisé{% endif %}</button></div>
+      {%- endform -%}
+      {%- if product.description != blank -%}<div class="rte product-desc">{{ product.description }}</div>{%- endif -%}
+    </div>
+  </div>
+  {%- endif -%}
+</div>
+<script type="application/ld+json">{{ product | structured_data }}</script>
+{%- if col -%}
+  {%- render 'np-breadcrumbs-ld', name: product.title, url: product.url, parent_name: col.title, parent_url: col.url -%}
+{%- else -%}
+  {%- render 'np-breadcrumbs-ld', name: product.title, url: product.url -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Fiche produit NolaPrint",
+  "tag": "div",
+  "blocks": [
+    {
+      "type": "@app"
+    }
+  ],
+  "settings": [
+    { "type": "checkbox", "id": "mode_image", "label": "Gabarit « Votre photo »", "info": "Coché dans templates/product.image.json : la fiche ouvre la personnalisation avec photo (lien ?view=image).", "default": false },
+    {
+      "type": "paragraph",
+      "content": "Les objets NolaPrint sont reconnus par leurs tags : np-mug, np-verre ou np-bois, et np-gabarit-a, np-gabarit-b ou np-blanche. Variantes : Destinataire, Texte (Sans texte / Avec texte), et Forme sur le bois. Lots, trio, livraison et serveur d'aperçu : Paramètres du thème › NolaPrint."
+    },
+    {
+      "type": "text",
+      "id": "tax_note",
+      "label": "Mention sous le prix",
+      "default": "TTC · TVA non applicable, art. 293 B du CGI"
+    },
+    {
+      "type": "header",
+      "content": "Accroches"
+    },
+    {
+      "type": "textarea",
+      "id": "lede_mug",
+      "label": "Mug",
+      "default": "Un mug en céramique blanche, peint à la gouache pour celles et ceux que vous aimez. Ajoutez un titre, des prénoms et une phrase si vous le souhaitez : il devient le leur, pour longtemps."
+    },
+    {
+      "type": "textarea",
+      "id": "lede_verre",
+      "label": "Boule en verre",
+      "default": "Un disque de verre cristal taillé, qui accroche la lumière du sapin. Avec les prénoms de la famille, il devient le souvenir qu'on ressort chaque année."
+    },
+    {
+      "type": "textarea",
+      "id": "lede_bois",
+      "label": "Décoration en bois",
+      "default": "Une décoration en bois massif, à suspendre au sapin ou à poser sur le frigo grâce à son dos aimanté. Six formes, et le texte de votre choix."
+    },
+    {
+      "type": "header",
+      "content": "Délais en jours ouvrés (min-max)"
+    },
+    {
+      "type": "text",
+      "id": "ship_mug",
+      "label": "Mug : expédition",
+      "default": "3-4"
+    },
+    {
+      "type": "text",
+      "id": "deliver_mug",
+      "label": "Mug : livraison",
+      "default": "11-13"
+    },
+    {
+      "type": "text",
+      "id": "ship_verre",
+      "label": "Boule : expédition",
+      "default": "3-4"
+    },
+    {
+      "type": "text",
+      "id": "deliver_verre",
+      "label": "Boule : livraison",
+      "default": "11-13"
+    },
+    {
+      "type": "text",
+      "id": "ship_bois",
+      "label": "Décoration : expédition",
+      "default": "3-4"
+    },
+    {
+      "type": "text",
+      "id": "deliver_bois",
+      "label": "Décoration : livraison",
+      "default": "11-13"
+    },
+    {
+      "type": "range",
+      "id": "cutoff",
+      "label": "Heure limite de commande du jour (heure de Paris)",
+      "info": "Après cette heure, le week-end ou un jour férié, la fabrication démarre le jour ouvré suivant.",
+      "min": 8,
+      "max": 23,
+      "step": 1,
+      "unit": "h",
+      "default": 14
+    },
+    {
+      "type": "header",
+      "content": "Noël : commander avant le (AAAA-MM-JJ)",
+      "info": "La case « Pour Noël » disparaît d'elle-même après la date."
+    },
+    {
+      "type": "text",
+      "id": "noel_mug",
+      "label": "Mug",
+      "default": "2026-12-08"
+    },
+    {
+      "type": "text",
+      "id": "noel_verre",
+      "label": "Boule",
+      "default": "2026-11-10"
+    },
+    {
+      "type": "text",
+      "id": "noel_bois",
+      "label": "Décoration",
+      "default": "2026-12-08"
+    },
+    {
+      "type": "header",
+      "content": "Rétractation (sous le bouton)"
+    },
+    {
+      "type": "text",
+      "id": "retract_free",
+      "label": "Sans texte",
+      "default": "Sans texte, l'article peut être retourné dans les 14 jours suivant sa réception (frais de renvoi à votre charge)."
+    },
+    {
+      "type": "text",
+      "id": "retract_perso",
+      "label": "Avec texte ou image",
+      "default": "Avec votre texte ou votre image, l'article est fabriqué pour vous : il ne peut pas être retourné pour un changement d'avis (art. L221-28 3° du Code de la consommation). Casse et défauts restent couverts."
+    },
+    {
+      "type": "header",
+      "content": "Sécurité du produit (GPSR)"
+    },
+    {
+      "type": "html",
+      "id": "maker",
+      "label": "Fabricant : nom, adresse postale, e-mail",
+      "default": "NolaPrint · <span class=\"todo\">[adresse de l'entreprise]</span> · contact@nolaprint.fr"
+    },
+    {
+      "type": "html",
+      "id": "safety_mug",
+      "label": "Mug",
+      "default": "<p>Mug en céramique, contenance 33 cl. Va au lave-vaisselle et au micro-ondes. Conforme au règlement REACH ; migration du plomb et du cadmium dans les limites légales. Boisson chaude : manipuler avec précaution.</p>"
+    },
+    {
+      "type": "html",
+      "id": "safety_verre",
+      "label": "Boule en verre",
+      "default": "<p>Objet décoratif en verre, fragile : à manipuler avec précaution. Ce n'est pas un jouet : tenir hors de portée des jeunes enfants. Entretien : chiffon microfibre sec.</p>"
+    },
+    {
+      "type": "html",
+      "id": "safety_bois",
+      "label": "Décoration en bois",
+      "default": "<p>Décoration destinée aux adultes, ce n'est pas un jouet. Dos aimanté : tenir hors de portée des enfants. Entretien : chiffon microfibre sec.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Onglets sous la fiche"
+    },
+    {
+      "type": "html",
+      "id": "tab_ship",
+      "label": "Livraison et retours",
+      "default": "<h3>Fabrication et expédition</h3><p>Votre article est imprimé à la commande dans un atelier partenaire en Europe, puis expédié avec un numéro de suivi. La date d'arrivée estimée s'affiche plus haut ; elle tient compte des week-ends et des jours fériés. Livraison 4,90 € par commande, offerte dès 60 € d'articles.</p><h3>Annulation et modification</h3><p>La fabrication commence peu après le paiement. Écrivez-nous tout de suite à <a href=\"mailto:contact@nolaprint.fr\">contact@nolaprint.fr</a> : si elle n'a pas commencé, nous corrigeons votre commande, ou nous l'annulons et vous remboursons intégralement.</p><h3>Remplacement et remboursement</h3><p>Nous refaisons gratuitement votre article, ou nous vous le remboursons intégralement, dans les cas suivants :</p><ul><li>il arrive cassé ou abîmé pendant le transport ;</li><li>il présente un défaut de fabrication ou d'impression ;</li><li>il ne correspond pas à votre commande (objet, forme, illustration, texte saisi) ;</li><li>le colis est perdu par le transporteur.</li></ul><p>Envoyez-nous simplement une photo de l'article et du colis avec votre numéro de commande : vous n'avez rien à renvoyer.</p><h3>Changement d'avis</h3><p>Un article avec notre illustration seule, sans texte, peut être retourné dans les 14 jours suivant sa réception ; les frais de renvoi sont à votre charge et nous vous remboursons sous 14 jours. Un article avec votre texte ou votre image est fabriqué pour vous : il ne peut pas être retourné pour un changement d'avis.</p><p><a href=\"/pages/livraison-retours\">Expédition et livraison</a> · <a href=\"/pages/retractation\">Retours et remboursements</a></p>"
+    },
+    {
+      "type": "html",
+      "id": "tab_pay",
+      "label": "Paiement sécurisé",
+      "default": "<p>Le paiement est traité par Shopify Payments, certifié PCI DSS niveau 1, le plus haut niveau de sécurité des paiements par carte. Vos données bancaires sont chiffrées et ne nous sont jamais transmises : nous ne voyons ni votre numéro de carte, ni son code.</p><p>Selon votre banque, une validation 3D Secure peut vous être demandée. Le montant est débité à la validation de la commande ; en cas d'annulation ou de remboursement, il vous est rendu par le même moyen de paiement.</p>"
+    },
+    {
+      "type": "text",
+      "id": "related_heading",
+      "label": "Titre des autres objets",
+      "default": "Sur nos autres objets"
+    }
+  ]
+}
+{% endschema %}

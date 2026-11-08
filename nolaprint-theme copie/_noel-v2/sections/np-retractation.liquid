@@ -1,0 +1,50 @@
+{%- comment -%}
+  Page « Retours et remboursements » : la demande se fait d'abord par e-mail.
+  En bas, la fonction « Renoncer au contrat ici » (obligatoire depuis le 19/06/2026, ordonnance n° 2026-2),
+  envoyée par le formulaire de contact Shopify.
+{%- endcomment -%}
+{%- assign title = section.settings.heading | default: page.title -%}
+<div class="page np-legal">
+  <nav class="crumbs" aria-label="Fil d'Ariane"><a href="{{ routes.root_url }}">Accueil</a> / <span aria-current="page">{{ title | escape }}</span></nav>
+  <h1>{{ title | escape }}</h1>
+  {%- if page.content != blank -%}<div class="rte">{{ page.content }}</div>{%- endif -%}
+  {%- if section.settings.body != blank -%}{{ section.settings.body }}{%- endif -%}
+
+  <section class="np-renoncer" id="renoncer" aria-labelledby="np-renoncer-title">
+    <h2 id="np-renoncer-title">Renoncer au contrat ici</h2>
+    {%- if section.settings.intro != blank -%}<p>{{ section.settings.intro | escape }}</p>{%- endif -%}
+    {%- form 'contact', class: 'form-card', id: 'np-retract-form' -%}
+      {%- if form.posted_successfully? -%}
+        <div class="ack" role="status">
+          <p><b>Votre rétractation est bien enregistrée.</b> Reçue le {{ 'now' | date: '%d/%m/%Y à %H:%M' }}.</p>
+          <p style="margin-top:.5rem">Nous vous écrivons sous 48 heures ouvrées avec l'adresse de retour des articles concernés. Vous avez ensuite 14 jours pour nous les renvoyer ; le remboursement intervient dans les 14 jours suivant votre demande, au plus tard à réception des articles ou de la preuve d'envoi.</p>
+          <p class="muted" style="margin-top:.5rem"><span class="todo">Accusé de réception automatique par e-mail : à brancher avant la mise en ligne.</span></p>
+        </div>
+      {%- else -%}
+        {%- if form.errors -%}<p class="np-form-error" role="alert">{{ form.errors | default_errors }}</p>{%- endif -%}
+        <input type="hidden" name="contact[Objet]" value="Rétractation : renonciation au contrat">
+        <div class="grid-2">
+          <div class="field"><label for="rtName">Prénom et nom</label><input class="input" id="rtName" name="contact[name]" required autocomplete="name"></div>
+          <div class="field"><label for="rtMail">E-mail de la commande</label><input class="input" id="rtMail" type="email" name="contact[email]" required autocomplete="email"></div>
+        </div>
+        <div class="field"><label for="rtOrder">Numéro de commande</label><input class="input" id="rtOrder" name="contact[Numéro de commande]" required placeholder="#1001"></div>
+        <div class="field"><label for="rtItems">Articles concernés <span class="np-label-note">facultatif</span></label><input class="input" id="rtItems" name="contact[body]" placeholder="Laissez vide pour toute la commande"></div>
+        <div><button class="btn btn-primary" type="submit">Confirmer ma rétractation</button></div>
+      {%- endif -%}
+    {%- endform -%}
+  </section>
+</div>
+{%- render 'np-breadcrumbs-ld', name: title, url: page.url -%}
+
+{% schema %}
+{
+  "name": "Retours et rétractation",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Titre (vide = titre de la page Shopify)" },
+    { "type": "html", "id": "body", "label": "Contenu (HTML)" },
+    { "type": "text", "id": "intro", "label": "Texte au-dessus du formulaire", "default": "Pour un article sans texte, vous pouvez aussi déclarer votre rétractation directement ici, en deux clics. Nous vous confirmons la réception par e-mail." }
+  ],
+  "presets": [{ "name": "Retours et rétractation" }]
+}
+{% endschema %}

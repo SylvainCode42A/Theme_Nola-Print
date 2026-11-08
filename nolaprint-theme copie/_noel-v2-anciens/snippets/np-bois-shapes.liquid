@@ -1,0 +1,44 @@
+{% doc %}
+  Formes de la décoration en bois : photo de chaque forme (vierge et avec chaque design) et zones d'impression,
+  en JSON pour np.js. Le cœur utilise les images np-bois-<design>-*.jpg, les autres np-bois-<forme>-<design>-*.jpg.
+  Positions mesurées sur les maquettes (repère 1000 x 1000).
+{% enddoc %}
+{%- liquid
+  assign keys = 'coeur,sapin,etoile,cloche,chaussette,ovale' | split: ','
+  assign ids = 'd01,d02,d03,d04,d05,d06,d07,d08,d09,d10' | split: ','
+-%}
+{
+{%- for k in keys -%}
+  {%- liquid
+    if k == 'coeur'
+      assign prefix = 'np-bois-'
+    else
+      assign prefix = 'np-bois-' | append: k | append: '-'
+    endif
+    assign blank_file = prefix | append: 'vierge.jpg'
+    assign blank_thumb = prefix | append: 'vierge-t.jpg'
+  -%}
+  {{ k | json }}: {
+  {%- case k -%}
+  {%- when 'coeur' -%}"name": {"x": 495.0, "y": 673.5, "scale": 0.3946, "maxlen": 252.6 }, "print": {"cx": 495.0, "cy": 541.2, "size": 473.6 },
+  {%- when 'sapin' -%}"name": {"x": 495.0, "y": 766.6, "scale": 0.3363, "maxlen": 215.3 }, "print": {"cx": 495.0, "cy": 653.9, "size": 403.6 },
+  {%- when 'etoile' -%}"name": {"x": 498.0, "y": 683.3, "scale": 0.3729, "maxlen": 238.7 }, "print": {"cx": 498.0, "cy": 558.4, "size": 447.5 },
+  {%- when 'cloche' -%}"name": {"x": 500.0, "y": 767.7, "scale": 0.3756, "maxlen": 240.4 }, "print": {"cx": 500.0, "cy": 641.9, "size": 450.7 },
+  {%- when 'chaussette' -%}"name": {"x": 591.5, "y": 701.4, "scale": 0.2949, "maxlen": 188.8 }, "print": {"cx": 591.5, "cy": 602.6, "size": 353.9 },
+  {%- when 'ovale' -%}"name": {"x": 493.0, "y": 674.3, "scale": 0.4874, "maxlen": 311.9 }, "print": {"cx": 493.0, "cy": 511.1, "size": 584.9 },
+  {%- endcase -%}
+  "blank": {{ blank_file | asset_url | json }}, "blank_t": {{ blank_thumb | asset_url | json }},
+  "imgs": {
+  {%- for id in ids -%}
+    {%- assign f = prefix | append: id | append: '-nu.jpg' -%}
+    {{ id | json }}: {{ f | asset_url | json }}{% unless forloop.last %},{% endunless %}
+  {%- endfor -%}
+  },
+  "thumbs": {
+  {%- for id in ids -%}
+    {%- assign f = prefix | append: id | append: '-t.jpg' -%}
+    {{ id | json }}: {{ f | asset_url | json }}{% unless forloop.last %},{% endunless %}
+  {%- endfor -%}
+  } }{% unless forloop.last %},{% endunless %}
+{%- endfor -%}
+}

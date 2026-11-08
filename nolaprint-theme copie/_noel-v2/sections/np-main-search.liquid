@@ -1,0 +1,22 @@
+<div class="page" style="max-width:1180px">
+  <nav class="crumbs" aria-label="Fil d'Ariane"><a href="{{ routes.root_url }}">Accueil</a> / <span aria-current="page">Recherche</span></nav>
+  <h1>Recherche</h1>
+  <form action="{{ routes.search_url }}" method="get" role="search" class="buy-row" style="margin:1rem 0 1.5rem">
+    <label class="sr" for="np-search">Rechercher</label>
+    <input class="input" id="np-search" type="search" name="q" value="{{ search.terms | escape }}" placeholder="Mug, boule de Noël, prénom…">
+    <button class="btn btn-primary" type="submit">Rechercher</button>
+  </form>
+  {%- if search.performed -%}
+    <p class="muted">{{ search.results_count }} résultat{% if search.results_count > 1 %}s{% endif %} pour « {{ search.terms | escape }} »</p>
+    <div class="grid" style="margin-top:1rem; padding-bottom:3rem">
+      {%- for item in search.results -%}
+        {%- if item.object_type == 'product' -%}{%- render 'np-product-card', product: item -%}
+        {%- else -%}<a class="card" href="{{ item.url }}"><div class="card-body"><h3>{{ item.title | escape }}</h3></div></a>{%- endif -%}
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{ "name": "Recherche NolaPrint", "tag": "div" }
+{% endschema %}

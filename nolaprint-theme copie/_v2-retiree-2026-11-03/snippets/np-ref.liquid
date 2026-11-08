@@ -1,0 +1,87 @@
+{% doc %}
+  Référentiel NolaPrint de Noël 2026 (décisions 13, 14, 15 ; brief de génération, section 2) :
+  destinataires, titres, palettes, symboles, gabarits et limites de texte.
+  Une seule source pour la fiche produit (JSON lu par np.js) et pour les libellés Liquid.
+
+  @param {string} mode - 'json' (tout le référentiel), 'dest' (nom d'un destinataire), 'gab' (nom d'un gabarit)
+  @param {string} [id] - id du destinataire (mode 'dest')
+  @param {string} [gabarit] - 'A', 'B' ou 'blanche' (mode 'gab')
+  @param {string} [declinaison] - 'base' ou 'noel' (mode 'gab')
+{% enddoc %}
+{%- case mode -%}
+  {%- when 'dest' -%}
+    {%- case id -%}
+      {%- when 'maman' -%}Maman
+      {%- when 'papa' -%}Papa
+      {%- when 'mamie' -%}Mamie
+      {%- when 'papy' -%}Papy
+      {%- when 'couple' -%}Couple
+      {%- when 'famille' -%}Famille
+    {%- endcase -%}
+  {%- when 'gab' -%}
+    {%- if gabarit == 'A' -%}{%- if declinaison == 'noel' -%}Ornements de Noël{%- else -%}Fleurs de naissance{%- endif -%}
+    {%- elsif gabarit == 'B' -%}{%- if declinaison == 'noel' -%}Le goûter d’hiver{%- else -%}La table du goûter{%- endif -%}
+    {%- else -%}Votre image{%- endif -%}
+  {%- when 'json' -%}
+{
+  "ordre": ["maman", "papa", "mamie", "papy", "couple", "famille"],
+  "destinataires": {
+    "maman": { "nom": "Maman", "fond": "#F2D9DC",
+      "titres": ["Maman", "Mam", "Mamoune", "Môman", "Mère"],
+      "couleurs": [ { "nom": "Prune", "hex": "#7B3F61" }, { "nom": "Brun", "hex": "#6B4430" }, { "nom": "Vert", "hex": "#5E8A6E" }, { "nom": "Bleu nuit", "hex": "#2B3A67" } ] },
+    "papa": { "nom": "Papa", "fond": "#E3DED6",
+      "titres": ["Papa", "Pap", "Papounet", "Pôpa", "Père"],
+      "couleurs": [ { "nom": "Bleu nuit", "hex": "#2B3A67" }, { "nom": "Brun", "hex": "#8A5A3B" }, { "nom": "Bleu roi", "hex": "#2F4FA8" }, { "nom": "Noir", "hex": "#1A1A1A" } ] },
+    "mamie": { "nom": "Mamie", "fond": "#F3E6D3",
+      "titres": ["Mamie", "Mémé", "Mamou", "Mamina", "Grand-mère", "Nana", "Mamita", "Bonne-maman"],
+      "couleurs": [ { "nom": "Brun", "hex": "#6B4430" }, { "nom": "Corail", "hex": "#C8453C" }, { "nom": "Vert sauge", "hex": "#5E8A6E" }, { "nom": "Bleu nuit", "hex": "#2B3A67" } ] },
+    "papy": { "nom": "Papy", "fond": "#D6DEE6",
+      "titres": ["Papy", "Papi", "Pépé", "Papou", "Grand-père", "Papet", "Papito", "Bon-papa"],
+      "couleurs": [ { "nom": "Bleu nuit", "hex": "#2B3A67" }, { "nom": "Brique", "hex": "#B5533C" }, { "nom": "Vert bouteille", "hex": "#2E5E4E" }, { "nom": "Brun", "hex": "#6B4430" } ] },
+    "couple": { "nom": "Couple", "fond": "#F5EFE0",
+      "titres": ["Papy et Mamie", "Pépé et Mémé", "Papa et Maman"], "deux_surnoms": true,
+      "couleurs": [ { "nom": "Bordeaux", "hex": "#7A1E2E" }, { "nom": "Brun", "hex": "#6B4430" }, { "nom": "Vert", "hex": "#5E8A6E" }, { "nom": "Bleu nuit", "hex": "#2B3A67" } ] },
+    "famille": { "nom": "Famille", "fond": "#F5EFE0",
+      "titres": ["Famille", "Chez nous", "Notre tribu"], "famille_nom": true,
+      "couleurs": [ { "nom": "Vert", "hex": "#2E5E4E" }, { "nom": "Brun", "hex": "#6B4430" }, { "nom": "Terracotta", "hex": "#C8623C" }, { "nom": "Bleu nuit", "hex": "#2B3A67" } ] }
+  },
+  "surnoms": ["Mamie", "Mémé", "Mamou", "Mamina", "Grand-mère", "Nana", "Mamita", "Bonne-maman", "Papy", "Papi", "Pépé", "Papou", "Grand-père", "Papet", "Papito", "Bon-papa", "Maman", "Mam", "Mamoune", "Môman", "Papa", "Pap", "Papounet", "Pôpa"],
+  "blanche": { "couleurs": [ { "nom": "Noir", "hex": "#1A1A1A" }, { "nom": "Blanc", "hex": "#FFFFFF" }, { "nom": "Bleu nuit", "hex": "#2B3A67" }, { "nom": "Bordeaux", "hex": "#7A1E2E" }, { "nom": "Vert bouteille", "hex": "#2E5E4E" }, { "nom": "Brun", "hex": "#6B4430" } ] },
+  "symboles": {
+    "base": [
+      { "id": "oeillet", "nom": "Œillet", "mois": "janvier" },
+      { "id": "violette", "nom": "Violette", "mois": "février" },
+      { "id": "jonquille", "nom": "Jonquille", "mois": "mars" },
+      { "id": "marguerite", "nom": "Marguerite", "mois": "avril" },
+      { "id": "muguet", "nom": "Muguet", "mois": "mai" },
+      { "id": "rose", "nom": "Rose", "mois": "juin" },
+      { "id": "pied-dalouette", "nom": "Pied-d’alouette", "mois": "juillet" },
+      { "id": "glaieul", "nom": "Glaïeul", "mois": "août" },
+      { "id": "aster", "nom": "Aster", "mois": "septembre" },
+      { "id": "souci", "nom": "Souci", "mois": "octobre" },
+      { "id": "chrysantheme", "nom": "Chrysanthème", "mois": "novembre" },
+      { "id": "houx", "nom": "Houx", "mois": "décembre" }
+    ],
+    "noel": [
+      { "id": "boule", "nom": "Boule" },
+      { "id": "etoile", "nom": "Étoile" },
+      { "id": "sapin", "nom": "Sapin" },
+      { "id": "flocon", "nom": "Flocon" },
+      { "id": "pain-depice", "nom": "Bonhomme de pain d’épice" },
+      { "id": "coeur-noel", "nom": "Cœur de Noël" }
+    ]
+  },
+  "gabarits": {
+    "A": { "base": "Fleurs de naissance", "noel": "Ornements de Noël", "police": "Caveat Brush", "symboles": true },
+    "B": { "base": "La table du goûter", "noel": "Le goûter d’hiver", "police": "Nunito", "symboles": false },
+    "blanche": { "base": "Votre image", "noel": "Votre image", "police": "Nunito", "symboles": false }
+  },
+  "formes_image": [
+    { "id": "tout", "nom": "Toute la surface" },
+    { "id": "sapin", "nom": "Sapin" },
+    { "id": "etoile", "nom": "Étoile" },
+    { "id": "rond", "nom": "Rond" }
+  ],
+  "limites": { "prenoms": 6, "prenom": 15, "titre": 30, "phrase": 40 }
+}
+{%- endcase -%}

@@ -1,0 +1,23 @@
+{% doc %}
+  Données structurées BreadcrumbList : Accueil > (parent) > page.
+
+  @param {string} name - nom de la page courante
+  @param {string} url - URL relative de la page courante
+  @param {string} [parent_name] - nom du niveau intermédiaire
+  @param {string} [parent_url] - URL relative du niveau intermédiaire
+{% enddoc %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Accueil", "item": {{ shop.url | append: '/' | json }} },
+    {%- if parent_name != blank -%}
+    { "@type": "ListItem", "position": 2, "name": {{ parent_name | json }}, "item": {{ shop.url | append: parent_url | json }} },
+    { "@type": "ListItem", "position": 3, "name": {{ name | json }}, "item": {{ shop.url | append: url | json }} }
+    {%- else -%}
+    { "@type": "ListItem", "position": 2, "name": {{ name | json }}, "item": {{ shop.url | append: url | json }} }
+    {%- endif -%}
+  ]
+}
+</script>

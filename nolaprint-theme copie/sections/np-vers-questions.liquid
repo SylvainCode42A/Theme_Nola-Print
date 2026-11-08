@@ -1,0 +1,6 @@
+{%- comment -%} Ancienne page Questions fréquentes : renvoie vers les questions en bas de l'accueil. {%- endcomment -%}
+<script>location.replace({{ routes.root_url | append: '#questions' | json }});</script>
+<p class="wrap" style="padding:40px 0"><a href="{{ routes.root_url }}#questions">Les questions fréquentes sont en bas de l'accueil.</a></p>
+{% schema %}
+{ "name": "Vers les questions", "settings": [] }
+{% endschema %}

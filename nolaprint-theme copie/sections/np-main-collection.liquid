@@ -1,0 +1,43 @@
+{%- paginate collection.products by 24 -%}
+<div class="wrap">
+  <nav class="crumbs" aria-label="Fil d'Ariane"><a href="{{ routes.root_url }}">Accueil</a> / <span aria-current="page">{{ collection.title | escape }}</span></nav>
+  <div class="section-head"><div>
+    <p class="eyebrow">{{ collection.products_count }} cadeau{% if collection.products_count > 1 %}x{% endif %} personnalisable{% if collection.products_count > 1 %}s{% endif %}</p>
+    <h1 style="font-size:clamp(2rem,4vw,2.8rem)">{{ collection.title | escape }}</h1>
+  </div></div>
+  {%- if collection.description != blank -%}<div class="rte collection-intro">{{ collection.description }}</div>{%- endif -%}
+  {%- if collection.products.size > 0 -%}
+    <div class="grid" style="padding-bottom:2rem">
+      {%- liquid
+        # Collections par destinataire (maman, papa, mamie, papy, couple, famille) : chaque carte montre et ouvre ce destinataire
+        assign is_noel = false
+        if collection.handle == 'noel'
+          assign is_noel = true
+        endif
+        assign c_dest = nil
+        assign dest_ids = 'maman,papa,mamie,papy,couple,famille' | split: ','
+        for d in dest_ids
+          if collection.handle == d or collection.handle contains d
+            assign c_dest = d
+          endif
+        endfor
+      -%}
+      {%- for p in collection.products -%}{%- render 'np-product-card', product: p, noel: is_noel, dest: c_dest -%}{%- endfor -%}
+    </div>
+  {%- else -%}
+    <div class="empty-reviews" style="margin-bottom:3rem"><p><b>Aucun cadeau dans cette collection pour l'instant.</b></p><p style="margin-top:1rem"><a class="btn btn-primary" href="{{ routes.root_url }}">Retour à l'accueil</a></p></div>
+  {%- endif -%}
+  {%- if paginate.pages > 1 -%}
+    <nav class="np-pagination" aria-label="Pagination">
+      {%- if paginate.previous -%}<a class="btn btn-ghost" href="{{ paginate.previous.url }}" rel="prev">Précédent</a>{%- endif -%}
+      <span class="muted">Page {{ paginate.current_page }} sur {{ paginate.pages }}</span>
+      {%- if paginate.next -%}<a class="btn btn-ghost" href="{{ paginate.next.url }}" rel="next">Suivant</a>{%- endif -%}
+    </nav>
+  {%- endif -%}
+</div>
+{%- endpaginate -%}
+{%- render 'np-breadcrumbs-ld', name: collection.title, url: collection.url -%}
+
+{% schema %}
+{ "name": "Collection NolaPrint", "tag": "div" }
+{% endschema %}

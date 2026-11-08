@@ -1,0 +1,38 @@
+{% doc %}
+  Handle Shopify d'un produit NolaPrint de Noël 2026 (décision 15 : un produit par objet et par gabarit,
+  plus la page blanche). Changer un handle ici suffit pour tout le thème.
+
+  @param {string} objet - 'mug', 'verre' ou 'bois'
+  @param {string} gabarit - 'A', 'B' ou 'blanche'
+{% enddoc %}
+{%- liquid
+  case objet
+    when 'mug'
+      case gabarit
+        when 'A'
+          echo 'mug-fleurs-de-naissance'
+        when 'B'
+          echo 'mug-table-du-gouter'
+        else
+          echo 'mug-votre-image'
+      endcase
+    when 'verre'
+      case gabarit
+        when 'A'
+          echo 'boule-de-noel-ornements'
+        when 'B'
+          echo 'boule-de-noel-gouter-d-hiver'
+        else
+          echo 'boule-de-noel-votre-image'
+      endcase
+    when 'bois'
+      case gabarit
+        when 'A'
+          echo 'decoration-bois-ornements'
+        when 'B'
+          echo 'decoration-bois-gouter-d-hiver'
+        else
+          echo 'decoration-bois-votre-image'
+      endcase
+  endcase
+-%}

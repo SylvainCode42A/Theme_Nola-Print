@@ -1,0 +1,96 @@
+{%- comment -%}
+  Offres de l'accueil (décision 12) : lots de 3 du même objet, remisés par une remise automatique Shopify
+  (tous les produits de l'objet comptent ensemble), et le trio « un de chaque » (code Shopify posé par le panier).
+  Montants : Paramètres du thème › NolaPrint : offres et livraison. Prix de référence : le gabarit A de chaque objet.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign types = 'mug,verre,bois' | split: ','
+  assign titles = '3 mugs|3 boules de Noël|3 décorations en bois' | split: '|'
+  assign alts = 'Trois mugs personnalisés pour Mamie, Papy et Maman|Trois boules de Noël en verre personnalisées|Trois décorations en bois personnalisées' | split: '|'
+  assign offs = settings.np_lot_off_mug | append: ',' | append: settings.np_lot_off_verre | append: ',' | append: settings.np_lot_off_bois | split: ','
+  capture mug_h
+    render 'np-handle', objet: 'mug', gabarit: 'A'
+  endcapture
+  assign mug_h = mug_h | strip
+  assign mug_url = all_products[mug_h].url | default: '/products/mug-fleurs-de-naissance'
+-%}
+{%- if settings.np_lots_enabled -%}
+<section class="block np-offers" id="offres"><div class="wrap">
+  <div class="section-head"><div>
+    {%- if s.eyebrow != blank -%}<p class="eyebrow">{{ s.eyebrow | escape }}</p>{%- endif -%}
+    <h2>{{ s.heading | escape }}</h2>
+    {%- if s.text != blank -%}<p class="muted np-head-text">{{ s.text | escape }}</p>{%- endif -%}
+  </div></div>
+  <div class="np-offer-grid">
+    {%- assign trio = 0 -%}
+    {%- assign trio_ok = true -%}
+    {%- for t in types -%}
+      {%- capture h -%}{%- render 'np-handle', objet: t, gabarit: 'A' -%}{%- endcapture -%}
+      {%- assign h = h | strip -%}
+      {%- assign p = all_products[h] -%}
+      {%- assign i = forloop.index0 -%}
+      {%- if p.id -%}
+        {%- liquid
+          assign off = offs[i] | plus: 0
+          assign ref = p.price_min | times: 3
+          assign save = off | times: 3
+          assign lot = ref | minus: save
+          assign trio = trio | plus: p.price_min
+          capture img
+            echo 'np2-offre-lot-' | append: t | append: '.jpg'
+          endcapture
+        -%}
+        {%- if off > 0 -%}
+        <a class="np-offer-card" href="{{ p.url }}">
+          <div class="np-offer-shot"><img src="{{ img | asset_url }}" alt="{{ alts[i] }}" width="1200" height="900" loading="lazy"><span class="np-offer-tag">−{{ save | money }}</span></div>
+          <div class="np-offer-body">
+            <h3>{{ titles[i] }}</h3>
+            <p class="muted">Un destinataire et un texte au choix pour chacun, nos illustrations ou votre photo.</p>
+            <p class="np-offer-price"><b>{{ lot | money }}</b><s class="np-compare">{{ ref | money }}</s></p>
+          </div>
+        </a>
+        {%- endif -%}
+      {%- else -%}
+        {%- assign trio_ok = false -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if trio_ok and s.show_trio -%}
+      {%- liquid
+        assign trio_off = 0
+        if settings.np_trio_enabled
+          assign trio_off = settings.np_trio_off | default: 0
+        endif
+      -%}
+      <a class="np-offer-card" href="{{ mug_url }}">
+        <div class="np-offer-shot"><img src="{{ 'np2-offre-trio.jpg' | asset_url }}" alt="Un mug, une boule de Noël et une décoration en bois personnalisés" width="1200" height="900" loading="lazy">{%- if trio_off > 0 -%}<span class="np-offer-tag">−{{ trio_off | money }}</span>{%- endif -%}</div>
+        <div class="np-offer-body">
+          <h3>Le trio de Noël</h3>
+          <p class="muted">Un mug, une boule et une décoration, chacun à personnaliser.</p>
+          {%- if trio_off > 0 -%}
+            <p class="np-offer-price"><b>{{ trio | minus: trio_off | money }}</b><s class="np-compare">{{ trio | money }}</s> les trois</p>
+          {%- else -%}
+            <p class="np-offer-price"><b>{{ trio | money }}</b>les trois</p>
+          {%- endif -%}
+        </div>
+      </a>
+    {%- endif -%}
+  </div>
+  {%- if s.note != blank -%}<p class="np-offers-note">{{ s.note | escape }}</p>{%- endif -%}
+</div></section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Offres NolaPrint",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Surtitre", "default": "Nos offres" },
+    { "type": "text", "id": "heading", "label": "Titre H2", "default": "Un cadeau pour chacun" },
+    { "type": "text", "id": "text", "label": "Texte", "default": "Dès 3 articles du même objet, chacun est remisé : idéal pour gâter toute la famille." },
+    { "type": "checkbox", "id": "show_trio", "label": "Afficher le trio (un de chaque)", "info": "Remise du trio : Paramètres du thème › NolaPrint : offres et livraison.", "default": true },
+    { "type": "text", "id": "note", "label": "Note sous les offres", "default": "Remises appliquées automatiquement dans le panier. Texte : +1 € par article dès qu'un champ est rempli ; votre photo : +2 €." }
+  ],
+  "presets": [{ "name": "Offres NolaPrint" }]
+}
+{% endschema %}

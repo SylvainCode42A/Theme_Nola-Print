@@ -1,0 +1,14 @@
+{% doc %}
+  URL d'une page d'aide : la vraie page Shopify si elle existe, sinon la vue de la maquette sur l'accueil.
+
+  @param {string} handle - handle de la page Shopify (ex. cgv)
+  @param {string} hash - ancre de la maquette (ex. cgv)
+{% enddoc %}
+{%- liquid
+  assign p = pages[handle]
+  if p.id
+    echo p.url
+  else
+    echo routes.root_url | append: '#' | append: hash
+  endif
+-%}

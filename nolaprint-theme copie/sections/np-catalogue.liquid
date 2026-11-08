@@ -1,0 +1,68 @@
+{%- comment -%}
+  Catalogue de l'accueil : les trois objets, chacun vers sa fiche produit (gabarit A), sinon sa collection
+  (mugs, boules-de-noel, decorations-en-bois), sinon sa galerie. Prix « dès » : le moins cher des produits de l'objet.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign types = 'mug,verre,bois' | split: ','
+  assign cols = 'mugs,boules-de-noel,decorations-en-bois' | split: ','
+  assign names = 'Mugs|Boules de Noël en verre|Décorations en bois' | split: '|'
+  assign texts = 'Céramique 33 cl, peinte à la gouache, tout le tour imprimé.|Verre cristal taillé de 7,6 cm, qui accroche la lumière du sapin.|Bois massif, six formes, à suspendre ou à aimanter.' | split: '|'
+  assign imgs = 'np2-ex-mug-a-mamie-base-s.jpg,np2-ex-verre-a-mamie-noel-s.jpg,np2-ex-bois-a-mamie-noel-s.jpg' | split: ','
+  assign gabs = 'A,B,blanche' | split: ','
+-%}
+<section class="block" id="catalogue"><div class="wrap">
+  <div class="section-head"><div>
+    {%- if s.eyebrow != blank -%}<p class="eyebrow">{{ s.eyebrow | escape }}</p>{%- endif -%}
+    <h2>{{ s.heading | escape }}</h2></div>
+    {%- if s.text != blank -%}<p class="muted np-head-text">{{ s.text | escape }}</p>{%- endif -%}
+  </div>
+  <div class="grid np-pgrid">
+    {%- for t in types -%}
+      {%- liquid
+        assign i = forloop.index0
+        assign c = collections[cols[i]]
+        assign anciens = 'mug-personnalise,boule-de-noel-verre-personnalisee,decoration-bois-personnalisee' | split: ','
+        assign url = '/products/' | append: anciens[i]
+        assign mini = 0
+        for g in gabs
+          capture h
+            render 'np-handle', objet: t, gabarit: g
+          endcapture
+          assign h = h | strip
+          assign p = all_products[h]
+          if p.id and g == 'A'
+            # la carte ouvre la fiche produit de l'objet (le mug en 3D), comme le menu
+            assign url = p.url
+          endif
+          if p.id
+            if mini == 0 or p.price_min < mini
+              assign mini = p.price_min
+            endif
+          endif
+        endfor
+      -%}
+      <a class="card np-pcard" href="{{ url }}">
+        <div class="np-shot"><img src="{{ imgs[i] | asset_url }}" alt="{{ names[i] | escape }} personnalisés" width="480" height="480" loading="lazy"><span class="badge">3 modèles</span></div>
+        <div class="card-body">
+          <h3>{{ names[i] }}</h3>
+          <p class="muted np-card-desc">{{ texts[i] }}</p>
+          <div class="card-foot"><span class="np-price-row"><span class="price">{% if mini > 0 %}<small class="np-from">Dès</small> {{ mini | money }}{% endif %}</span></span><span class="btn btn-primary np-btn-sm">Voir</span></div>
+        </div>
+      </a>
+    {%- endfor -%}
+  </div>
+</div></section>
+
+{% schema %}
+{
+  "name": "Catalogue NolaPrint",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Surtitre", "default": "Nos objets" },
+    { "type": "text", "id": "heading", "label": "Titre H2", "default": "Trois objets, tous personnalisables" },
+    { "type": "text", "id": "text", "label": "Texte", "default": "Pour chacun : nos deux illustrations, ou votre photo." }
+  ],
+  "presets": [{ "name": "Catalogue NolaPrint" }]
+}
+{% endschema %}

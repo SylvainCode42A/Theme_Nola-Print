@@ -1,0 +1,63 @@
+{%- comment -%}
+  « Votre photo » : les trois objets vierges (mug, boule, décoration en bois). Chaque carte ouvre la fiche de l'objet
+  sur l'onglet « Votre photo » (?photo=1), ou le produit « page blanche » s'il est en ligne (réglage du thème).
+  Le bouton « Votre photo » du menu mène ici (#votre-photo).
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign types = 'mug,verre,bois' | split: ','
+  assign noms = 'Mug|Boule de Noël en verre|Décoration en bois' | split: '|'
+  assign textes = 'Votre photo tout autour du mug, ou dans un calque.|Votre photo dans le disque de verre, qui accroche la lumière.|Votre photo sur le bois massif, dans l’une des six formes.' | split: '|'
+  assign imgs = 'np-mug-vierge.jpg,np-verre-vierge.jpg,np-bois-vierge.jpg' | split: ','
+-%}
+<section class="block" id="votre-photo"><div class="wrap">
+  <div class="section-head"><div>
+    {%- if s.eyebrow != blank -%}<p class="eyebrow">{{ s.eyebrow | escape }}</p>{%- endif -%}
+    <h2>{{ s.heading | escape }}</h2></div>
+    {%- if s.text != blank -%}<p class="muted np-head-text">{{ s.text | escape }}</p>{%- endif -%}
+  </div>
+  <div class="grid np-pgrid">
+    {%- for t in types -%}
+      {%- liquid
+        capture ha
+          render 'np-handle', objet: t, gabarit: 'A'
+        endcapture
+        assign ha = ha | strip
+        capture hb
+          render 'np-handle', objet: t, gabarit: 'blanche'
+        endcapture
+        assign hb = hb | strip
+        # lien en dur vers l'ancien produit de l'objet, onglet « Votre photo » (produit « page blanche » si les 9 produits sont activés)
+        assign anciens = 'mug-personnalise,boule-de-noel-verre-personnalisee,decoration-bois-personnalisee' | split: ','
+        assign url = '/products/' | append: anciens[forloop.index0] | append: '?photo=1'
+        assign p = all_products[anciens[forloop.index0]]
+        if settings.np_nouveaux_produits and all_products[hb].id
+          assign p = all_products[hb]
+          assign url = p.url
+        endif
+      -%}
+      <a class="card np-dcard np-dcard-libre" href="{{ url }}">
+        <div class="np-shot"><img src="{{ imgs[forloop.index0] | asset_url }}" alt="{{ noms[forloop.index0] | escape }} vierge, à personnaliser avec votre photo" width="480" height="480" loading="lazy">
+          <span class="np-upload-badge" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M12 16V5m0 0l-4 4m4-4l4 4M5 15v3a2 2 0 002 2h10a2 2 0 002-2v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Votre photo</span></div>
+        <div class="card-body">
+          <span class="np-for">Votre photo</span>
+          <h3>{{ noms[forloop.index0] }}</h3>
+          <p class="muted np-card-desc">{{ textes[forloop.index0] }}</p>
+          <div class="card-foot"><span class="np-price-row"><span class="price">{% if p.id %}<small class="np-from">Dès</small> {{ p.price_min | money }}{% endif %}</span></span><span class="btn btn-primary np-btn-sm">Personnaliser</span></div>
+        </div>
+      </a>
+    {%- endfor -%}
+  </div>
+</div></section>
+
+{% schema %}
+{
+  "name": "Votre photo : 3 objets",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Surtitre", "default": "Votre photo" },
+    { "type": "text", "id": "heading", "label": "Titre H2", "default": "Choisissez l'objet pour votre photo" },
+    { "type": "text", "id": "text", "label": "Texte", "default": "Importez votre photo, retirez son fond si vous voulez, placez-la et zoomez : l'aperçu se met à jour en direct." }
+  ],
+  "presets": [{ "name": "Votre photo : 3 objets" }]
+}
+{% endschema %}

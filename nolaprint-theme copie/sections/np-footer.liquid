@@ -1,0 +1,81 @@
+{%- comment -%}
+  Pied de page NolaPrint (refonte du 02/11/2026) : contact, aide, informations légales, © et moyens de paiement.
+  Les liens vers une page qui n'existe pas encore dans Shopify (ex. suivi-de-commande) ne s'affichent pas.
+  « Renoncer au contrat ici » : fonction de rétractation obligatoire depuis le 19/06/2026 (ordonnance n° 2026-2), en lien simple.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign email = s.email | default: 'contact@nolaprint.fr'
+-%}
+<footer class="site np-foot">
+  <div class="wrap">
+    <div class="np-foot-grid">
+      <div class="np-foot-brand">
+        <a class="logo" href="{{ routes.root_url }}"><b>NolaPrint</b></a>
+        <ul class="np-foot-contact">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><a href="mailto:{{ email }}">{{ email }}</a></li>
+          {%- if s.hours != blank -%}<li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>{{ s.hours | escape }}</li>{%- endif -%}
+        </ul>
+      </div>
+      <div>
+        <h2>Aide</h2>
+        <ul class="np-foot-links">
+          <li><a href="{{ routes.root_url }}#questions">Questions fréquentes</a></li>
+          {%- if pages['suivi-de-commande'].id -%}<li><a href="{{ pages['suivi-de-commande'].url }}">Suivi de commande</a></li>{%- endif -%}
+          {%- if pages['livraison-retours'].id -%}<li><a href="{{ pages['livraison-retours'].url }}">Expédition et livraison</a></li>{%- endif -%}
+          {%- if pages['retractation'].id -%}<li><a href="{{ pages['retractation'].url }}">Retours et remboursements</a></li>{%- endif -%}
+          {%- if pages['contact'].id -%}<li><a href="{{ pages['contact'].url }}">Nous contacter</a></li>{%- endif -%}
+          {%- if pages['retractation'].id -%}<li><a href="{{ pages['retractation'].url }}#renoncer">Renoncer au contrat ici</a></li>{%- endif -%}
+        </ul>
+      </div>
+      <div>
+        <h2>Informations légales</h2>
+        <ul class="np-foot-links">
+          {%- if pages['cgv'].id -%}<li><a href="{{ pages['cgv'].url }}">Conditions générales de vente</a></li>{%- endif -%}
+          {%- if pages['conditions-utilisation'].id -%}<li><a href="{{ pages['conditions-utilisation'].url }}">Conditions d'utilisation</a></li>{%- endif -%}
+          {%- if pages['mentions-legales'].id -%}<li><a href="{{ pages['mentions-legales'].url }}">Mentions légales</a></li>{%- endif -%}
+          {%- if pages['confidentialite'].id -%}<li><a href="{{ pages['confidentialite'].url }}">Politique de confidentialité</a></li>{%- endif -%}
+        </ul>
+      </div>
+    </div>
+    <div class="np-foot-bottom">
+      <span>© {{ 'now' | date: '%Y' }} NolaPrint. Tous droits réservés.</span>
+      {%- if shop.enabled_payment_types.size > 0 -%}
+        <ul class="np-pay" aria-label="Moyens de paiement acceptés">
+          {%- for type in shop.enabled_payment_types -%}<li>{{ type | payment_type_svg_tag: class: 'np-pay-ico' }}</li>{%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </div>
+  </div>
+</footer>
+
+<div class="cookie" id="cookie" hidden>
+  <div class="cookie-card" role="dialog" aria-labelledby="ckTitle" aria-describedby="ckText">
+    <div>
+      <b id="ckTitle">Vos cookies, votre choix</b>
+      <p id="ckText" class="muted" style="font-size:.9rem; margin-top:.25rem">Nous utilisons des cookies nécessaires au panier et, avec votre accord, des cookies de mesure et de publicité. Refuser est aussi simple qu'accepter, et vous pouvez changer d'avis à tout moment depuis la page Confidentialité. <a href="{%- render 'np-url', handle: 'confidentialite', hash: 'confidentialite' -%}#cookies">En savoir plus</a></p>
+    </div>
+    <div class="cookie-prefs" id="ckPrefs" hidden>
+      <div class="toggle"><span><b>Nécessaires</b><br><small class="muted">Panier, sécurité. Toujours actifs.</small></span><input type="checkbox" checked disabled aria-label="Cookies nécessaires"></div>
+      <div class="toggle"><span><b>Mesure d'audience</b><br><small class="muted">Statistiques de visite anonymisées.</small></span><input type="checkbox" id="ckStats" aria-label="Mesure d'audience"></div>
+      <div class="toggle"><span><b>Publicité</b><br><small class="muted">Pixel Meta, API Conversions, Google Ads.</small></span><input type="checkbox" id="ckAds" aria-label="Publicité"></div>
+    </div>
+    <div class="cookie-actions">
+      <button class="btn btn-ghost" type="button" id="ckRefuse">Tout refuser</button>
+      <button class="btn btn-quiet" type="button" id="ckCustom">Personnaliser</button>
+      <button class="btn btn-ghost" type="button" id="ckAccept">Tout accepter</button>
+    </div>
+  </div>
+</div>
+
+<button class="mock-chip" id="mockChip" type="button" aria-pressed="true">Maquette : zones à compléter visibles</button>
+
+{% schema %}
+{
+  "name": "Pied de page NolaPrint",
+  "settings": [
+    { "type": "text", "id": "email", "label": "E-mail du service client", "default": "contact@nolaprint.fr" },
+    { "type": "text", "id": "hours", "label": "Délai de réponse", "default": "Réponse sous 48 h ouvrées" }
+  ]
+}
+{% endschema %}

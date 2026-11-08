@@ -1,0 +1,58 @@
+{% doc %}
+  Les 10 designs NolaPrint : une seule liste pour l'accueil, la fiche produit et le panier.
+  Images : assets/np-<type>-<id>-s.jpg (carte, avec « Votre prénom »), -t.jpg (vignette), -nu.jpg (fiche, sans texte).
+
+  @param {string} mode - 'gallery' (cartes de l'accueil), 'swatches' (vignettes de la fiche produit), 'json' (données pour np.js), 'name' (nom du design dont l'id est passé dans id)
+  @param {string} [type] - 'mug' | 'verre' | 'bois' (pour gallery, swatches, json)
+  @param {string} [url] - URL du produit, pour 'gallery'
+  @param {string} [price] - prix affiché, pour 'gallery'
+  @param {string} [compare] - prix barré (déjà formaté), pour 'gallery' ; vide = pas de prix barré
+  @param {string} [label] - nom de l'objet (ex. « Mug »), pour les textes alternatifs
+  @param {string} [id] - identifiant de design, pour 'name'
+{% enddoc %}
+{%- liquid
+  assign ids = 'd01,d02,d03,d04,d05,d06,d07,d08,d09,d10' | split: ','
+  assign names = 'Maman d’amour|Super Papa|Mamie chérie|Le meilleur Papy|Toi & moi|Notre famille|Joyeux Noël|Mon premier Noël|Meilleures amies|Frères & sœurs' | split: '|'
+  assign auds = 'maman|papa|mamie|papy|couple|famille|noel|noel famille|amis|amis famille' | split: '|'
+  assign fors = 'Maman|Papa|Mamie|Papy|Couple|Famille|Noël|Bébé et parents|Amies|Frères et sœurs' | split: '|'
+  assign phs = 'Votre prénom|Votre prénom|Votre prénom|Votre prénom|Vos prénoms|Vos prénoms|Votre prénom|Votre prénom|Vos prénoms|Vos prénoms' | split: '|'
+  assign fonts = 'dancing,fredoka,playfair,playfair,dancing,caveat,dancing,playfair,caveat,fredoka' | split: ','
+  assign colors = '#7A3F52,#1F3A5F,#6B3A2A,#2F4F3F,#7A1630,#4A3B32,#2F6B4F,#2C3E66,#2E7D78,#24375A' | split: ','
+  assign sizes = '104,92,92,92,104,116,104,92,116,92' | split: ','
+-%}
+{%- case mode -%}
+  {%- when 'gallery' -%}
+    {%- for id in ids -%}
+      {%- assign i = forloop.index0 -%}
+      {%- capture img -%}np-{{ type }}-{{ id }}-s.jpg{%- endcapture -%}
+      <a class="card np-dcard" href="{{ url }}?design={{ id }}" data-aud="{{ auds[i] }}">
+        <div class="np-shot"><img src="{{ img | asset_url }}" alt="{{ label | escape }} personnalisé, design {{ names[i] | escape }}, avec votre prénom" width="480" height="480" loading="lazy"></div>
+        <div class="card-body">
+          <span class="np-for">Pour : {{ fors[i] }}</span>
+          <h3>{{ names[i] | escape }}</h3>
+          <div class="card-foot"><span class="np-price-row"><span class="price">{{ price }}</span>{%- if compare != blank -%}<s class="np-compare">{{ compare }}</s>{%- endif -%}</span><span class="btn btn-primary np-btn-sm">Personnaliser</span></div>
+        </div>
+      </a>
+    {%- endfor -%}
+  {%- when 'swatches' -%}
+    {%- for id in ids -%}
+      {%- assign i = forloop.index0 -%}
+      {%- capture img -%}np-{{ type }}-{{ id }}-t.jpg{%- endcapture -%}
+      <button type="button" class="np-sw" data-np-design="{{ id }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}" aria-label="Design {{ names[i] | escape }}">
+        <img src="{{ img | asset_url }}" alt="" width="200" height="200" loading="lazy">
+        <span>{{ names[i] | escape }}</span>
+      </button>
+    {%- endfor -%}
+  {%- when 'name' -%}
+    {%- for d in ids -%}{%- if d == id -%}{{ names[forloop.index0] }}{%- endif -%}{%- endfor -%}
+  {%- when 'json' -%}
+    [
+    {%- for id in ids -%}
+      {%- assign i = forloop.index0 -%}
+      {%- capture nu -%}np-{{ type }}-{{ id }}-nu.jpg{%- endcapture -%}
+      {%- capture th -%}np-{{ type }}-{{ id }}-t.jpg{%- endcapture -%}
+      {%- capture flat -%}np-{{ type }}-{{ id }}-flat.jpg{%- endcapture -%}
+      {"id": {{ id | json }}, "name": {{ names[i] | json }}, "ph": {{ phs[i] | json }}, "font": {{ fonts[i] | json }}, "color": {{ colors[i] | json }}, "size": {{ sizes[i] | plus: 0 }}, "img": {{ nu | asset_url | json }}, "thumb": {{ th | asset_url | json }}{% if type == 'mug' %}, "flat": {{ flat | asset_url | json }}{% endif %}}{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+    ]
+{%- endcase -%}

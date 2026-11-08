@@ -1,0 +1,149 @@
+{
+  "layout": "mesange",
+  "sections": {
+    "hero": {
+      "type": "np-hero",
+      "settings": {}
+    },
+    "trust": {
+      "type": "np-trust",
+      "blocks": {
+        "item_1": {
+          "type": "item",
+          "settings": {
+            "icon": "truck",
+            "title": "Livraison offerte dès 60 €",
+            "text": "4,90 € en dessous, avec suivi"
+          }
+        },
+        "item_2": {
+          "type": "item",
+          "settings": {
+            "icon": "eu",
+            "title": "Fabriqué en Europe",
+            "text": "Allemagne, Pays-Bas, Italie"
+          }
+        },
+        "item_3": {
+          "type": "item",
+          "settings": {
+            "icon": "box",
+            "title": "Peint pour chacun",
+            "text": "Maman, Papa, Mamie, Papy, couple, famille"
+          }
+        },
+        "item_4": {
+          "type": "item",
+          "settings": {
+            "icon": "shield",
+            "title": "Casse remplacée",
+            "text": "Article abîmé refait gratuitement"
+          }
+        }
+      },
+      "block_order": [
+        "item_1",
+        "item_2",
+        "item_3",
+        "item_4"
+      ]
+    },
+    "modes": {
+      "type": "np-modes",
+      "settings": {}
+    },
+    "designs": {
+      "type": "np-galerie",
+      "settings": {}
+    },
+    "catalogue": {
+      "type": "np-catalogue",
+      "settings": {}
+    },
+    "demo": {
+      "type": "np-demo",
+      "settings": {}
+    },
+    "faq": {
+      "type": "np-faq",
+      "settings": {
+        "eyebrow": "Questions fréquentes",
+        "heading": "Avant de commander"
+      },
+      "blocks": {
+        "question_1": {
+          "type": "question",
+          "settings": {
+            "question": "Comment personnaliser mon cadeau ?",
+            "answer": "De deux façons. <b>Nos illustrations</b> : une fleur de naissance (ou un ornement de Noël) par prénom, ou la table du goûter, déclinées pour Maman, Papa, Mamie, Papy, un couple ou toute la famille. <b>Votre photo</b> : partez de l'objet vierge et placez-la vous-même, pour 2 € de plus. Dans les deux cas, ajoutez si vous le souhaitez un titre, jusqu'à 6 prénoms et une phrase, pour 1 € de plus."
+          }
+        },
+        "question_2": {
+          "type": "question",
+          "settings": {
+            "question": "Quelle image puis-je importer ?",
+            "answer": "Une photo ou un dessin en JPG, PNG ou HEIC (photos d'iPhone), jusqu'à 20 Mo, avec au moins 1 200 pixels sur le petit côté ; au-delà de 2 000 pixels, l'impression est plus nette. Vous la placez sur toute la surface ou dans un sapin, une étoile ou un rond. Vous devez avoir les droits sur l'image ; les logos, marques et personnages protégés sont refusés."
+          }
+        },
+        "question_3": {
+          "type": "question",
+          "settings": {
+            "question": "Quelles formes pour la décoration en bois ?",
+            "answer": "Six formes au choix : cœur, sapin, étoile, cloche, chaussette de Noël et ovale. Bois massif de 1 cm, dos aimanté, ruban rouge fourni."
+          }
+        },
+        "question_4": {
+          "type": "question",
+          "settings": {
+            "question": "Le mug va-t-il au lave-vaisselle ?",
+            "answer": "Oui. Le mug en céramique de 33 cl va au lave-vaisselle et au micro-ondes ; son impression est testée par le fabricant sur au moins 3 000 cycles de lavage."
+          }
+        },
+        "question_5": {
+          "type": "question",
+          "settings": {
+            "question": "Jusqu'à quand puis-je commander pour Noël ?",
+            "answer": "Pour une livraison en France avant Noël : avant le <b>8 décembre</b> pour un mug ou une décoration en bois, avant le <b>10 novembre</b> pour une boule de Noël en verre."
+          }
+        },
+        "question_6": {
+          "type": "question",
+          "settings": {
+            "question": "Puis-je retourner un article ?",
+            "answer": "Un article sans texte, avec notre illustration seule, peut être retourné dans les 14 jours suivant sa réception (frais de renvoi à votre charge). Un article avec votre texte ou votre photo est fabriqué pour vous : il ne peut pas être retourné pour un changement d'avis. Dans tous les cas, un article abîmé ou mal imprimé est refait gratuitement. <a href=\"/pages/retractation\">Tout savoir</a>"
+          }
+        },
+        "q_fleurs": {
+          "type": "question",
+          "settings": {
+            "question": "Comment choisir la fleur de chaque prénom ?",
+            "answer": "Chaque mois a sa fleur de naissance : janvier œillet, février violette, mars jonquille, avril marguerite, mai muguet, juin rose, juillet pied-d'alouette, août glaïeul, septembre aster, octobre souci, novembre chrysanthème, décembre houx. Choisissez celle du mois de naissance de chacun, ou celle que vous préférez. À Noël, sur la boule et la décoration en bois, les fleurs laissent place aux ornements : boule, étoile, sapin, flocon, bonhomme de pain d'épice, cœur."
+          }
+        }
+      },
+      "block_order": [
+        "question_1",
+        "q_fleurs",
+        "question_2",
+        "question_3",
+        "question_4",
+        "question_5",
+        "question_6"
+      ]
+    },
+    "offres": {
+      "type": "np-offres",
+      "settings": {}
+    }
+  },
+  "order": [
+    "hero",
+    "trust",
+    "modes",
+    "designs",
+    "catalogue",
+    "offres",
+    "demo",
+    "faq"
+  ]
+}

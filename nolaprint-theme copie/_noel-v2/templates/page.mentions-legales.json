@@ -1,0 +1,14 @@
+{
+  "sections": {
+    "main": {
+      "type": "np-page-content",
+      "settings": {
+        "heading": "Mentions légales",
+        "body": "<h2>Éditeur du site</h2><p>Le site NolaPrint est édité par <span class=\"todo\">[Prénom NOM]</span>, entrepreneur individuel (EI), sous le nom commercial NolaPrint.</p><p>SIREN : <span class=\"todo\">[numéro]</span><br>Adresse de l'entreprise : <span class=\"todo\">[adresse de l'entreprise]</span><br>E-mail : <a href=\"mailto:contact@nolaprint.fr\">contact@nolaprint.fr</a><br>Téléphone : <span class=\"todo\">[numéro]</span></p><p>Directeur de la publication : l'entrepreneur nommé ci-dessus.</p><h2>Hébergement</h2><p>Shopify International Limited, Victoria Buildings, 2e étage, 1-2 Haddington Road, Dublin 4, D04 XN32, Irlande.</p><h2>Médiation de la consommation</h2><p>Si un litige n'a pas pu être réglé avec notre service client après une réclamation écrite, vous pouvez recourir gratuitement au médiateur de la consommation : <span class=\"todo\">[nom, adresse et site du médiateur]</span>.</p><h2>Propriété intellectuelle</h2><p>Les illustrations, textes, photos, aperçus et la marque NolaPrint sont notre propriété ou utilisés avec autorisation. Toute reproduction, même partielle, sans notre accord écrit est interdite.</p><h2>Signaler un contenu</h2><p>Si vous estimez qu'un article ou un contenu du site porte atteinte à vos droits, écrivez à <a href=\"mailto:contact@nolaprint.fr\">contact@nolaprint.fr</a> en précisant le contenu concerné, les droits invoqués et vos coordonnées. Le contenu est retiré sous 24 heures pendant l'examen de votre demande.</p>"
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

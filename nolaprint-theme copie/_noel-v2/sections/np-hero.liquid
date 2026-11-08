@@ -1,0 +1,67 @@
+{%- liquid
+  assign s = section.settings
+  capture h
+    render 'np-handle', objet: 'mug', gabarit: 'A'
+  endcapture
+  assign h = h | strip
+  assign mug = s.product | default: all_products[h]
+  assign mug_url = '/products/' | append: h
+  if mug.id
+    assign mug_url = mug.url
+  endif
+  capture hb
+    render 'np-handle', objet: 'mug', gabarit: 'blanche'
+  endcapture
+  assign hb = hb | strip
+  assign blanche_url = '/products/' | append: hb
+  if all_products[hb].id
+    assign blanche_url = all_products[hb].url
+  endif
+-%}
+<section class="cover np-cover"><div class="wrap cover-grid">
+  <div class="cover-text"><div class="cover-intro">
+    {%- if s.eyebrow != blank -%}<p class="eyebrow">{{ s.eyebrow | escape }}</p>{%- endif -%}
+    <h1><span>{{ s.heading_1 | escape }}</span> <em class="nw">{{ s.heading_2 | escape }}</em></h1>
+    {%- if s.lead != blank -%}<p class="cover-lead">{{ s.lead | escape }}</p>{%- endif -%}
+  </div><div class="cover-actions">
+    <ol class="np-cover-steps">
+      <li><b>1</b> Choisissez pour qui</li>
+      <li><b>2</b> Une illustration ou votre photo</li>
+      <li><b>3</b> Les prénoms, si vous voulez</li>
+    </ol>
+    <div class="cover-ctas">
+      {%- if s.cta_1_label != blank -%}<a class="btn btn-white" href="{{ s.cta_1_link | default: '#designs' | escape }}">{{ s.cta_1_label | escape }}</a>{%- endif -%}
+      {%- if s.cta_2_label != blank -%}<a class="btn btn-ghost-white" href="{% if s.cta_2_link != blank %}{{ s.cta_2_link | escape }}{% else %}{{ blanche_url }}{% endif %}">{{ s.cta_2_label | escape }}</a>{%- endif -%}
+    </div>
+    <div><a class="scroll-hint" href="#designs" data-scroll="designs">Voir les illustrations ↓</a></div>
+  </div></div>
+  <div class="np-cover-art">
+    <a class="np-cover-main" href="{{ mug_url }}?pour=mamie" aria-label="Personnaliser le mug Fleurs de naissance pour Mamie">
+      <img src="{{ 'np2-ex-mug-a-mamie-base.jpg' | asset_url }}" alt="Mug personnalisé, une fleur de naissance par prénom, pour Mamie" width="1000" height="1000" fetchpriority="high">
+    </a>
+    <img class="np-cover-mini np-mini-1" src="{{ 'np2-ex-verre-a-mamie-noel-s.jpg' | asset_url }}" alt="Boule de Noël en verre personnalisée, un ornement par prénom" width="480" height="480">
+    <img class="np-cover-mini np-mini-2" src="{{ 'np2-ex-bois-b-mamie-noel-s.jpg' | asset_url }}" alt="Décoration en bois en forme de cœur, le goûter d'hiver" width="480" height="480">
+    {%- if s.tag_name != blank -%}<p class="cover-tag"><b>{{ s.tag_name | escape }}</b> · {% if mug.id %}{% if mug.price_varies %}dès {% endif %}{{ mug.price_min | money }}{% else %}{{ s.tag_price | escape }}{% endif %}</p>{%- endif -%}
+  </div>
+</div></section>
+
+{% schema %}
+{
+  "name": "Couverture NolaPrint",
+  "tag": "div",
+  "settings": [
+    { "type": "product", "id": "product", "label": "Produit mis en avant (mug)" },
+    { "type": "text", "id": "eyebrow", "label": "Surtitre (vide = pas de surtitre)" },
+    { "type": "text", "id": "heading_1", "label": "Titre H1, première partie", "default": "Le cadeau personnalisé," },
+    { "type": "text", "id": "heading_2", "label": "Titre H1, partie soulignée", "default": "à votre façon." },
+    { "type": "textarea", "id": "lead", "label": "Texte d'introduction", "default": "Une fleur de naissance pour chaque petit-enfant, ou la table du goûter, peintes à la gouache pour Mamie, Papy, Maman, Papa, un couple ou toute la famille. Ou partez de votre photo. Fabriqué à la commande en Europe." },
+    { "type": "text", "id": "cta_1_label", "label": "Bouton 1", "default": "Choisir pour qui" },
+    { "type": "text", "id": "cta_1_link", "label": "Lien du bouton 1", "default": "#designs" },
+    { "type": "text", "id": "cta_2_label", "label": "Bouton 2", "default": "Partir de ma photo" },
+    { "type": "text", "id": "cta_2_link", "label": "Lien du bouton 2 (vide = mug avec votre photo)" },
+    { "type": "text", "id": "tag_name", "label": "Étiquette : nom", "default": "Mug fleurs de naissance" },
+    { "type": "text", "id": "tag_price", "label": "Étiquette : prix si le produit n'existe pas", "default": "dès 18,45 €" }
+  ],
+  "presets": [{ "name": "Couverture NolaPrint" }]
+}
+{% endschema %}

@@ -1,0 +1,56 @@
+{% doc %}
+  Carte produit NolaPrint : maquette du thème pour les objets NolaPrint (tags np-mug / np-verre / np-bois et
+  np-gabarit-a / np-gabarit-b / np-blanche), photo du produit sinon.
+
+  @param {object} product - le produit
+  @param {string} [dest] - destinataire montré sur l'image (mamie par défaut)
+  @param {boolean} [noel] - montrer la déclinaison de Noël du mug (collection Noël)
+{% enddoc %}
+{%- liquid
+  capture np_type
+    render 'np-type', product: product
+  endcapture
+  assign np_type = np_type | strip
+  assign gab = ''
+  if product.tags contains 'np-gabarit-a'
+    assign gab = 'a'
+  elsif product.tags contains 'np-gabarit-b'
+    assign gab = 'b'
+  elsif product.tags contains 'np-blanche'
+    assign gab = 'blanche'
+  endif
+  assign d = dest | default: 'mamie'
+  assign decl = 'noel'
+  if np_type == 'mug'
+    assign decl = 'base'
+    if noel and gab == 'a'
+      assign decl = 'noel'
+    endif
+  endif
+  if gab == 'blanche'
+    assign img = 'np-' | append: np_type | append: '-vierge-s.jpg'
+    assign badge = 'Votre photo, recadrée par vous'
+  elsif gab != blank
+    assign img = 'np2-ex-' | append: np_type | append: '-' | append: gab | append: '-' | append: d | append: '-' | append: decl | append: '-s.jpg'
+    assign badge = '6 destinataires · votre texte'
+  endif
+  assign url = product.url
+  if noel and np_type == 'mug' and gab == 'a'
+    assign url = url | append: '?noel=1'
+  endif
+-%}
+<a class="card np-pcard" href="{{ url }}">
+  <div class="np-shot">
+    {%- if np_type != blank and gab != blank -%}
+      <img src="{{ img | asset_url }}" alt="{{ product.title | escape }}" width="480" height="480" loading="lazy">
+      <span class="badge">{{ badge }}</span>
+    {%- elsif product.featured_media -%}
+      {{ product.featured_media | image_url: width: 600 | image_tag: loading: 'lazy', widths: '300, 450, 600', sizes: '(min-width: 900px) 25vw, 50vw', alt: product.featured_media.alt | default: product.title }}
+    {%- endif -%}
+  </div>
+  <div class="card-body">
+    <h3>{{ product.title | escape }}</h3>
+    {%- if product.description != blank -%}<p class="muted np-card-desc">{{ product.description | strip_html | truncatewords: 16 }}</p>{%- endif -%}
+    <div class="card-foot"><span class="np-price-row"><span class="price">{% if product.price_varies %}<small class="np-from">Dès</small> {% endif %}{{ product.price_min | money }}</span>{%- if product.compare_at_price_min > product.price_min -%}<s class="np-compare">{{ product.compare_at_price_min | money }}</s>{%- endif -%}</span><span class="btn btn-primary np-btn-sm">Personnaliser</span></div>
+  </div>
+</a>

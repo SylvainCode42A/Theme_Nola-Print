@@ -1,0 +1,30 @@
+<section class="block" id="questions" style="padding-top:0"><div class="wrap" style="max-width:860px">
+  <div class="section-head"><div>
+    {%- if section.settings.eyebrow != blank -%}<p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>{%- endif -%}
+    <h2>{{ section.settings.heading | escape }}</h2></div></div>
+  {%- for block in section.blocks -%}
+    <details class="faq" {{ block.shopify_attributes }}><summary>{{ block.settings.question | escape }}</summary><div class="ans">{{ block.settings.answer }}</div></details>
+  {%- endfor -%}
+</div></section>
+
+{% schema %}
+{
+  "name": "Questions fréquentes",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Surtitre", "default": "Questions fréquentes" },
+    { "type": "text", "id": "heading", "label": "Titre H2", "default": "Foire aux questions" }
+  ],
+  "blocks": [
+    {
+      "type": "question",
+      "name": "Question",
+      "settings": [
+        { "type": "text", "id": "question", "label": "Question", "default": "Votre question ?" },
+        { "type": "html", "id": "answer", "label": "Réponse (HTML)", "default": "<p>Votre réponse.</p>" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Questions fréquentes", "blocks": [{ "type": "question" }] }]
+}
+{% endschema %}

@@ -1,0 +1,11 @@
+<div class="wrap">
+  <nav class="crumbs" aria-label="Fil d'Ariane"><a href="{{ routes.root_url }}">Accueil</a> / <span aria-current="page">Collections</span></nav>
+  <div class="section-head"><div><h1 style="font-size:clamp(2rem,4vw,2.8rem)">Toutes les collections</h1></div></div>
+  <ul class="ticks" style="padding-bottom:3rem">
+    {%- for c in collections -%}<li><a href="{{ c.url }}">{{ c.title | escape }}</a> <span class="muted">({{ c.products_count }})</span></li>{%- endfor -%}
+  </ul>
+</div>
+
+{% schema %}
+{ "name": "Liste des collections", "tag": "div" }
+{% endschema %}

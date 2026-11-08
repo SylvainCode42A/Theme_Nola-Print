@@ -1,0 +1,28 @@
+{%- paginate blog.articles by 12 -%}
+<div class="page" style="max-width:980px">
+  <nav class="crumbs" aria-label="Fil d'Ariane"><a href="{{ routes.root_url }}">Accueil</a> / <span aria-current="page">{{ blog.title | escape }}</span></nav>
+  <h1>{{ blog.title | escape }}</h1>
+  {%- for article in blog.articles -%}
+    <article class="box">
+      <h2 style="margin-top:0"><a href="{{ article.url }}">{{ article.title | escape }}</a></h2>
+      <p class="muted" style="font-size:.85rem"><time datetime="{{ article.published_at | date: '%Y-%m-%d' }}">{{ article.published_at | date: '%d/%m/%Y' }}</time></p>
+      <p>{{ article.excerpt_or_content | strip_html | truncatewords: 40 }}</p>
+      <p style="margin-top:.6rem"><a class="link-btn" href="{{ article.url }}">Lire l'article</a></p>
+    </article>
+  {%- else -%}
+    <p class="muted">Aucun article pour l'instant.</p>
+  {%- endfor -%}
+  {%- if paginate.pages > 1 -%}
+    <nav class="np-pagination" aria-label="Pagination">
+      {%- if paginate.previous -%}<a class="btn btn-ghost" href="{{ paginate.previous.url }}" rel="prev">Précédent</a>{%- endif -%}
+      <span class="muted">Page {{ paginate.current_page }} sur {{ paginate.pages }}</span>
+      {%- if paginate.next -%}<a class="btn btn-ghost" href="{{ paginate.next.url }}" rel="next">Suivant</a>{%- endif -%}
+    </nav>
+  {%- endif -%}
+</div>
+{%- endpaginate -%}
+{%- render 'np-breadcrumbs-ld', name: blog.title, url: blog.url -%}
+
+{% schema %}
+{ "name": "Blog NolaPrint", "tag": "div" }
+{% endschema %}

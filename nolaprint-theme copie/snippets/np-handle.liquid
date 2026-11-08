@@ -1,0 +1,64 @@
+{% doc %}
+  Handle Shopify d'un produit NolaPrint de Noël 2026 (décision 15 : un produit par objet et par gabarit,
+  plus la page blanche). Changer un handle ici suffit pour tout le thème.
+
+  @param {string} objet - 'mug', 'verre' ou 'bois'
+  @param {string} gabarit - 'A', 'B' ou 'blanche'
+
+  Transition : tant que le produit du gabarit A n'est pas en ligne (import du CSV v4 pas encore fait ou
+  produit en brouillon), on renvoie l'ancien produit de l'objet (mug-personnalise, boule-de-noel-verre-personnalisee,
+  decoration-bois-personnalisee), ouvert en fiche gabarit A : le mug 3D, la boule et le bois restent accessibles.
+{% enddoc %}
+{%- liquid
+  assign h = ''
+  case objet
+    when 'mug'
+      case gabarit
+        when 'A'
+          assign h = 'mug-fleurs-de-naissance'
+        when 'B'
+          assign h = 'mug-table-du-gouter'
+        else
+          assign h = 'mug-votre-image'
+      endcase
+    when 'verre'
+      case gabarit
+        when 'A'
+          assign h = 'boule-de-noel-ornements'
+        when 'B'
+          assign h = 'boule-de-noel-gouter-d-hiver'
+        else
+          assign h = 'boule-de-noel-votre-image'
+      endcase
+    when 'bois'
+      case gabarit
+        when 'A'
+          assign h = 'decoration-bois-ornements'
+        when 'B'
+          assign h = 'decoration-bois-gouter-d-hiver'
+        else
+          assign h = 'decoration-bois-votre-image'
+      endcase
+  endcase
+  # Réglage du thème « Utiliser les 9 produits de Noël 2026 » : décoché, on reste sur les 3 produits actuels
+  # (un produit importé en brouillon peut être trouvé par all_products mais sa page est introuvable).
+  assign en_ligne = false
+  if settings.np_nouveaux_produits and all_products[h].id
+    assign en_ligne = true
+  endif
+  if en_ligne == false and gabarit != 'A'
+    assign h = 'np-absent'
+  endif
+  if gabarit == 'A' and en_ligne == false
+    case objet
+      when 'mug'
+        assign ancien = 'mug-personnalise'
+      when 'verre'
+        assign ancien = 'boule-de-noel-verre-personnalisee'
+      when 'bois'
+        assign ancien = 'decoration-bois-personnalisee'
+    endcase
+    assign h = ancien
+  endif
+  echo h
+-%}

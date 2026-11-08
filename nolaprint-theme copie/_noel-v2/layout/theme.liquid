@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  {%- render 'meta-tags' -%}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Nunito+Sans:wght@300;400;600;700;800&family=Young+Serif&display=swap">
+  {{ 'mesange.css' | asset_url | stylesheet_tag }}
+  {{ 'np.css' | asset_url | stylesheet_tag }}
+  {%- if request.page_type == 'index' -%}
+  {%- capture search_target -%}{{ shop.url }}{{ routes.search_url }}?q={search_term_string}{%- endcapture -%}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": {{ shop.url | append: '/#organization' | json }},
+        "name": {{ shop.name | json }},
+        "url": {{ shop.url | json }}
+      },
+      {
+        "@type": "WebSite",
+        "@id": {{ shop.url | append: '/#website' | json }},
+        "name": {{ shop.name | json }},
+        "url": {{ shop.url | json }},
+        "inLanguage": "fr-FR",
+        "publisher": { "@id": {{ shop.url | append: '/#organization' | json }} },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {{ search_target | json }},
+          "query-input": "required name=search_term_string"
+        }
+      }
+    ]
+  }
+  </script>
+  {%- endif -%}
+  {{ content_for_header }}
+</head>
+<body>
+  {% section 'np-header' %}
+  <main id="app" tabindex="-1" data-page="{{ request.page_type }}">
+    {{ content_for_layout }}
+  </main>
+  {% section 'np-footer' %}
+  <script src="{{ 'np.js' | asset_url }}" defer></script>
+</body>
+</html>

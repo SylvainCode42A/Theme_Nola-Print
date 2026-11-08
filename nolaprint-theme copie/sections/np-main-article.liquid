@@ -1,0 +1,13 @@
+<article class="page">
+  <nav class="crumbs" aria-label="Fil d'Ariane"><a href="{{ routes.root_url }}">Accueil</a> / <a href="{{ blog.url }}">{{ blog.title | escape }}</a> / <span aria-current="page">{{ article.title | escape }}</span></nav>
+  <h1>{{ article.title | escape }}</h1>
+  <p class="muted" style="font-size:.88rem">Par {{ article.author | escape }} · <time datetime="{{ article.published_at | date: '%Y-%m-%d' }}">{{ article.published_at | date: '%d/%m/%Y' }}</time></p>
+  {%- if article.image -%}<div style="margin:1rem 0">{{ article.image | image_url: width: 1200 | image_tag: loading: 'eager', fetchpriority: 'high', widths: '600, 900, 1200', sizes: '(min-width: 860px) 820px, 100vw', alt: article.image.alt | default: article.title, style: 'width:100%;height:auto;border-radius:12px' }}</div>{%- endif -%}
+  <div class="rte">{{ article.content }}</div>
+</article>
+<script type="application/ld+json">{{ article | structured_data }}</script>
+{%- render 'np-breadcrumbs-ld', name: article.title, url: article.url, parent_name: blog.title, parent_url: blog.url -%}
+
+{% schema %}
+{ "name": "Article NolaPrint", "tag": "div" }
+{% endschema %}

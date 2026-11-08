@@ -1,0 +1,237 @@
+{%- comment -%}
+  Galerie de l'accueil, Noël 2026 (décision 15) : par objet (onglets), les deux illustrations déclinées pour
+  six destinataires, plus la page blanche. Puces « pour qui » : Maman, Papa, Mamie, Papy, Couple, Famille, Noël.
+  Noël est une collection croisée : les déclinaisons de Noël (ornements, goûter d'hiver) apparaissent dans Noël
+  et dans leur destinataire. Amies et fratrie : masquée pour Noël 2026.
+  Chaque carte ouvre la fiche sur la bonne variante (?variant=), sans texte.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign types = 'mug,verre,bois' | split: ','
+  assign labels = 'Mugs|Boules de Noël en verre|Décorations en bois' | split: '|'
+  assign singular = 'Mug|Boule de Noël en verre|Décoration en bois' | split: '|'
+  assign dest_ids = 'maman,papa,mamie,papy,couple,famille' | split: ','
+  # « Le goûter » (gabarit B) retiré de la boutique le 03/11/2026 : seulement le jardin et le sapin
+  assign gabs = 'A' | split: ','
+-%}
+<section class="block sec-bdx" id="designs"><div class="wrap">
+  <div class="section-head"><div>
+    {%- if s.eyebrow != blank -%}<p class="eyebrow">{{ s.eyebrow | escape }}</p>{%- endif -%}
+    <h2>{{ s.heading | escape }}</h2>
+    {%- if s.text != blank -%}<p class="muted np-head-text">{{ s.text | escape }}</p>{%- endif -%}
+  </div></div>
+  <div class="np-tabs" role="tablist" aria-label="Choisir l'objet">
+    {%- for t in types -%}
+      <button class="np-tab" type="button" role="tab" id="np-tab-{{ t }}" aria-controls="np-grid-{{ t }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-np-tab="{{ t }}">{{ labels[forloop.index0] }}</button>
+    {%- endfor -%}
+  </div>
+  <div class="chips np-chips" role="group" aria-label="Filtrer par destinataire">
+    <button class="chip" type="button" data-np-aud="all" aria-pressed="true">Tous</button>
+    {%- for d in dest_ids -%}
+      <button class="chip" type="button" data-np-aud="{{ d }}" aria-pressed="false">{%- render 'np-ref', mode: 'dest', id: d -%}</button>
+    {%- endfor -%}
+    <button class="chip" type="button" data-np-aud="noel" aria-pressed="false">Noël</button>
+    {%- if s.show_amis -%}<button class="chip" type="button" data-np-aud="amis" aria-pressed="false">Amies et fratrie</button>{%- endif -%}
+  </div>
+  {%- for t in types -%}
+    {%- assign ti = forloop.index0 -%}
+    <div class="grid np-dgrid" id="np-grid-{{ t }}" role="tabpanel" aria-labelledby="np-tab-{{ t }}"{% unless forloop.first %} hidden{% endunless %}>
+      {%- for g in gabs -%}
+        {%- liquid
+          capture h
+            render 'np-handle', objet: t, gabarit: g
+          endcapture
+          assign h = h | strip
+          assign p = all_products[h]
+          assign gl = g | downcase
+          # Déclinaisons montrées : mug A en fleurs et en ornements, mug B de base, boule et bois de Noël
+          if t == 'mug'
+            if g == 'A'
+              assign decls = 'base,noel' | split: ','
+            else
+              assign decls = 'base' | split: ','
+            endif
+          else
+            assign decls = 'noel' | split: ','
+          endif
+          assign url = '/products/' | append: h
+          assign price = s.price_fallback
+          assign compare = ''
+          if p.id
+            assign url = p.url
+            assign price = p.price_min | money
+            if p.compare_at_price_min > p.price_min
+              assign compare = p.compare_at_price_min | money
+            endif
+          endif
+        -%}
+        {%- liquid
+          # Gabarit B pas encore en ligne : l'ancien produit de l'objet, ouvert sur « Le goûter » (?modele=gouter)
+          assign ancien_p = false
+          unless p.id
+            capture ha
+              render 'np-handle', objet: t, gabarit: 'A'
+            endcapture
+            assign ha = ha | strip
+            assign p = all_products[ha]
+            if p.id
+              assign url = p.url
+              assign price = p.price_min | money
+            endif
+          endunless
+          unless p.tags contains 'np-gabarit-a' or p.tags contains 'np-gabarit-b'
+            assign ancien_p = true
+          endunless
+        -%}
+        {%- if settings.np_nouveaux_produits -%}{%- unless p.id -%}{%- continue -%}{%- endunless -%}{%- endif -%}
+        {%- for dc in decls -%}
+          {%- for d in dest_ids -%}
+            {%- liquid
+              assign link = url
+              if p.id
+                # variante du destinataire, sans texte (et cœur sur le bois)
+                for v in p.variants
+                  assign vt = v.title | downcase
+                  assign dn = d
+                  if vt contains dn and vt contains 'sans'
+                    if t != 'bois' or vt contains 'cœur' or vt contains 'coeur'
+                      assign link = v.url
+                      break
+                    endif
+                  endif
+                endfor
+              endif
+              # Tant que les 9 produits de Noël ne sont pas activés (réglage du thème), lien en dur vers l'ancien produit de
+              # l'objet : jamais de recherche de produit qui pourrait échouer et renvoyer vers une page introuvable
+              unless settings.np_nouveaux_produits
+                assign ancien_p = true
+              endunless
+              if ancien_p
+                case t
+                  when 'mug'
+                    assign link = '/products/mug-personnalise'
+                  when 'verre'
+                    assign link = '/products/boule-de-noel-verre-personnalisee'
+                  else
+                    assign link = '/products/decoration-bois-personnalisee'
+                endcase
+                assign link = link | append: '?pour=' | append: d
+                if gl == 'b'
+                  assign link = link | append: '&modele=gouter'
+                endif
+              endif
+              if dc == 'noel' and t == 'mug'
+                if link contains '?'
+                  assign link = link | append: '&noel=1'
+                else
+                  assign link = link | append: '?noel=1'
+                endif
+              endif
+              assign aud = d
+              if dc == 'noel'
+                assign aud = d | append: ' noel'
+              endif
+              capture img
+                echo 'np2-ex-' | append: t | append: '-' | append: gl | append: '-' | append: d | append: '-' | append: dc | append: '-s.jpg'
+              endcapture
+              capture dest_label
+                render 'np-ref', mode: 'dest', id: d
+              endcapture
+              capture gab_label
+                render 'np-ref', mode: 'gab', gabarit: g, declinaison: dc
+              endcapture
+              # « Le jardin de Mamie », « Le sapin de Papy », « Le goûter chez Papy et Mamie » (décision 15)
+              case d
+                when 'couple'
+                  assign qui = 'Papy et Mamie'
+                when 'famille'
+                  assign qui = 'la famille'
+                else
+                  assign qui = dest_label | strip
+              endcase
+              if g == 'A'
+                assign gab_label = gab_label | strip | append: ' de ' | append: qui
+              else
+                assign gab_label = gab_label | strip | append: ' ' | append: qui
+              endif
+            -%}
+            <a class="card np-dcard" href="{{ link }}" data-aud="{{ aud }}">
+              <div class="np-shot"><img src="{{ img | asset_url }}" alt="{{ singular[ti] | escape }} {{ gab_label | escape }} pour {{ dest_label | escape }}" width="480" height="480" loading="lazy"></div>
+              <div class="card-body">
+                <span class="np-for">Pour : {{ dest_label }}</span>
+                <h3>{{ gab_label }}</h3>
+                <div class="card-foot"><span class="np-price-row"><span class="price">{{ price }}</span>{%- if compare != blank -%}<s class="np-compare">{{ compare }}</s>{%- endif -%}</span><span class="btn btn-primary np-btn-sm">Personnaliser</span></div>
+              </div>
+            </a>
+          {%- endfor -%}
+        {%- endfor -%}
+      {%- endfor -%}
+      {%- liquid
+        capture h
+          render 'np-handle', objet: t, gabarit: 'blanche'
+        endcapture
+        assign h = h | strip
+        assign p = all_products[h]
+        assign url = '/products/' | append: h
+        assign price = s.price_fallback_blanche
+        assign compare = ''
+        if p.id
+          assign url = p.url
+          assign price = p.price_min | money
+          if p.compare_at_price_min > p.price_min
+            assign compare = p.compare_at_price_min | money
+          endif
+        endif
+        capture blank_img
+          echo 'np-' | append: t | append: '-vierge-s.jpg'
+        endcapture
+      -%}
+      {%- unless p.id -%}
+        {%- comment -%} Produit « Votre photo » pas encore en ligne : l'ancien produit de l'objet, en mode photo (?view=image) {%- endcomment -%}
+        {%- capture ha -%}{%- render 'np-handle', objet: t, gabarit: 'A' -%}{%- endcapture -%}
+        {%- assign ha = ha | strip -%}
+        {%- assign p = all_products[ha] -%}
+        {%- if p.id -%}{%- assign price = p.price_min | money -%}{%- endif -%}
+      {%- endunless -%}
+      {%- unless settings.np_nouveaux_produits -%}
+        {%- case t -%}
+          {%- when 'mug' -%}{%- assign url = '/products/mug-personnalise?photo=1' -%}
+          {%- when 'verre' -%}{%- assign url = '/products/boule-de-noel-verre-personnalisee?photo=1' -%}
+          {%- else -%}{%- assign url = '/products/decoration-bois-personnalisee?photo=1' -%}
+        {%- endcase -%}
+      {%- endunless -%}
+      {%- assign montrer = true -%}{%- if settings.np_nouveaux_produits and p.id == blank -%}{%- assign montrer = false -%}{%- endif -%}
+      {%- if montrer -%}
+      <a class="card np-dcard np-dcard-libre" href="{{ url }}" data-aud="all">
+        <div class="np-shot"><img src="{{ blank_img | asset_url }}" alt="{{ singular[ti] | escape }} vierge à personnaliser avec votre photo" width="480" height="480" loading="lazy">
+          <span class="np-upload-badge" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M12 16V5m0 0l-4 4m4-4l4 4M5 15v3a2 2 0 002 2h10a2 2 0 002-2v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Votre photo</span></div>
+        <div class="card-body">
+          <span class="np-for">Page blanche</span>
+          <h3>Avec votre photo</h3>
+          <div class="card-foot"><span class="np-price-row"><span class="price">{{ price }}</span>{%- if compare != blank -%}<s class="np-compare">{{ compare }}</s>{%- endif -%}</span><span class="btn btn-primary np-btn-sm">Personnaliser</span></div>
+        </div>
+      </a>
+      {%- endif -%}
+    </div>
+  {%- endfor -%}
+  <p class="np-gallery-note" data-np-gallery-note>{{ s.note | escape }}</p>
+  {%- comment -%} Aucun produit en ligne (produits en brouillon ou archivés) : un message plutôt qu'une galerie vide {%- endcomment -%}
+  <script>(function(){var g=document.getElementById("designs");if(g&&!g.querySelector(".np-dcard")){var p=document.createElement("p");p.className="np-gallery-note";p.textContent="Nos cadeaux reviennent très vite : la boutique est en cours de mise à jour.";g.querySelector(".wrap").appendChild(p);}})();</script>
+</div></section>
+
+{% schema %}
+{
+  "name": "Galerie des designs",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Surtitre", "default": "Nos illustrations" },
+    { "type": "text", "id": "heading", "label": "Titre H2", "default": "Pour qui est votre cadeau ?" },
+    { "type": "text", "id": "text", "label": "Texte", "default": "Peintes à la gouache, déclinées pour chacun dans ses couleurs : une fleur de naissance ou un ornement de Noël par prénom." },
+    { "type": "checkbox", "id": "show_amis", "label": "Afficher « Amies et fratrie »", "info": "Masquée pour Noël 2026 (décision 15) : aucun gabarit pour ce public.", "default": false },
+    { "type": "text", "id": "price_fallback", "label": "Prix affiché si un produit n'existe pas encore", "default": "Dès 17,95 €" },
+    { "type": "text", "id": "price_fallback_blanche", "label": "Prix de la page blanche si le produit n'existe pas encore", "default": "Dès 19,95 €" },
+    { "type": "text", "id": "note", "label": "Note sous la galerie", "default": "Titre, prénoms et phrase au choix, +1 € dès qu'un champ est rempli. Décoration en bois : 6 formes au choix." }
+  ],
+  "presets": [{ "name": "Galerie des designs" }]
+}
+{% endschema %}

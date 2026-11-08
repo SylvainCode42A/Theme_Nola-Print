@@ -1,0 +1,21 @@
+{%- comment -%} Page de contenu (CGV, mentions, confidentialité, livraison, FAQ…) : titre H1 = réglage « Titre » ou titre de la page Shopify. {%- endcomment -%}
+{%- assign title = section.settings.heading | default: page.title -%}
+<div class="page np-legal">
+  <nav class="crumbs" aria-label="Fil d'Ariane"><a href="{{ routes.root_url }}">Accueil</a> / <span aria-current="page">{{ title | escape }}</span></nav>
+  <h1>{{ title | escape }}</h1>
+  {%- if page.content != blank -%}<div class="rte">{{ page.content }}</div>{%- endif -%}
+  {%- if section.settings.body != blank -%}{{ section.settings.body }}{%- endif -%}
+</div>
+{%- render 'np-breadcrumbs-ld', name: title, url: page.url -%}
+
+{% schema %}
+{
+  "name": "Contenu de page NolaPrint",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Titre (vide = titre de la page Shopify)" },
+    { "type": "html", "id": "body", "label": "Contenu (HTML), affiché après le contenu saisi dans l'admin" }
+  ],
+  "presets": [{ "name": "Contenu de page NolaPrint" }]
+}
+{% endschema %}

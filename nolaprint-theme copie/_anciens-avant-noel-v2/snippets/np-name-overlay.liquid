@@ -1,0 +1,56 @@
+{% doc %}
+  Texte personnalisé posé sur la photo du produit (SVG 1000 x 1000 superposé à l'image) :
+  sur le mug, il suit la courbure du mug ; sur la boule et le bois, il est droit.
+  Les positions viennent du calcul des maquettes (assets np-<type>-<design>-nu.jpg).
+
+  @param {string} type - 'mug' | 'verre' | 'bois'
+  @param {string} [uid] - suffixe unique de l'identifiant du tracé
+  @param {string} text - texte affiché au départ
+  @param {string} font - dancing | fredoka | playfair | caveat | figtree
+  @param {string} color - couleur du texte
+  @param {number} size - taille du texte en unités design (1200)
+{% enddoc %}
+{%- liquid
+  case type
+    when 'mug'
+      assign d = 'M211.6 623.3 A243.2 66.9 0 0 0 687.4 623.3'
+      assign scale = 0.3906
+      assign maxlen = 297
+    when 'verre'
+      assign d = 'M117.4 698.6 L877.4 698.6'
+      assign scale = 0.6113
+      assign maxlen = 465
+    else
+      assign d = 'M195 673.5 L795 673.5'
+      assign scale = 0.3946
+      assign maxlen = 253
+  endcase
+  case font
+    when 'fredoka'
+      assign family = 'Fredoka, sans-serif'
+      assign weight = 600
+      assign fstyle = 'normal'
+    when 'playfair'
+      assign family = 'Playfair Display, serif'
+      assign weight = 700
+      assign fstyle = 'italic'
+    when 'caveat'
+      assign family = 'Caveat, cursive'
+      assign weight = 700
+      assign fstyle = 'normal'
+    when 'figtree'
+      assign family = 'Figtree, sans-serif'
+      assign weight = 700
+      assign fstyle = 'normal'
+    else
+      assign family = 'Dancing Script, cursive'
+      assign weight = 700
+      assign fstyle = 'normal'
+  endcase
+  assign fs = size | times: scale | round: 1
+  assign pid = 'np-path-' | append: type | append: uid
+-%}
+<svg class="np-name-svg np-name-{{ type }}" viewBox="0 0 1000 1000" aria-hidden="true" data-np-overlay data-scale="{{ scale }}" data-maxlen="{{ maxlen }}">
+  <defs><path id="{{ pid }}" d="{{ d }}"/></defs>
+  <text class="np-name-text" font-family="{{ family }}" font-weight="{{ weight }}" font-style="{{ fstyle }}" font-size="{{ fs }}" fill="{{ color }}" data-np-text><textPath href="#{{ pid }}" startOffset="50%" text-anchor="middle" data-np-textpath>{{ text | escape }}</textPath></text>
+</svg>

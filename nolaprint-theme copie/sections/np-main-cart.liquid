@@ -1,0 +1,212 @@
+{%- liquid
+  assign free_ship = settings.np_free_ship | default: 6000
+  assign q_mug = 0
+  assign q_verre = 0
+  assign q_bois = 0
+  for item in cart.items
+    capture t
+      render 'np-type', product: item.product
+    endcapture
+    assign t = t | strip
+    case t
+      when 'mug'
+        assign q_mug = q_mug | plus: item.quantity
+      when 'verre'
+        assign q_verre = q_verre | plus: item.quantity
+      when 'bois'
+        assign q_bois = q_bois | plus: item.quantity
+    endcase
+  endfor
+
+  # Fiche du gabarit A de chaque objet (liens « Personnaliser » des indications)
+  capture h
+    render 'np-handle', objet: 'mug', gabarit: 'A'
+  endcapture
+  assign h = h | strip
+  assign url_mug = all_products[h].url | default: '/'
+  capture h
+    render 'np-handle', objet: 'verre', gabarit: 'A'
+  endcapture
+  assign h = h | strip
+  assign url_verre = all_products[h].url | default: '/'
+  capture h
+    render 'np-handle', objet: 'bois', gabarit: 'A'
+  endcapture
+  assign h = h | strip
+  assign url_bois = all_products[h].url | default: '/'
+
+  # Trio de Noël : un mug, une boule, une décoration → code de réduction appliqué par np.js
+  assign trio_on = false
+  assign trio_code = settings.np_trio_code | strip
+  if settings.np_trio_enabled and settings.np_trio_off > 0 and trio_code != blank
+    assign trio_on = true
+  endif
+  assign trio_types = 0
+  if q_mug > 0
+    assign trio_types = trio_types | plus: 1
+  endif
+  if q_verre > 0
+    assign trio_types = trio_types | plus: 1
+  endif
+  if q_bois > 0
+    assign trio_types = trio_types | plus: 1
+  endif
+  # Codes déjà appliqués (commande et articles) : celui du trio, et les autres à garder
+  assign trio_applied = false
+  assign other_codes = ','
+  assign t_up = trio_code | upcase
+  for app in cart.cart_level_discount_applications
+    if app.type == 'discount_code'
+      assign c_up = app.title | upcase
+      if c_up == t_up
+        assign trio_applied = true
+      else
+        assign c_key = ',' | append: app.title | append: ','
+        unless other_codes contains c_key
+          assign other_codes = other_codes | append: app.title | append: ','
+        endunless
+      endif
+    endif
+  endfor
+  for item in cart.items
+    for alloc in item.line_level_discount_allocations
+      if alloc.discount_application.type == 'discount_code'
+        assign c_key = ',' | append: alloc.discount_application.title | append: ','
+        unless other_codes contains c_key
+          assign other_codes = other_codes | append: alloc.discount_application.title | append: ','
+        endunless
+      endif
+    endfor
+  endfor
+-%}
+<div class="page np-cart" style="max-width:980px">
+  <nav class="crumbs" aria-label="Fil d'Ariane"><a href="{{ routes.root_url }}">Accueil</a> / <span aria-current="page">Panier</span></nav>
+  <h1>Votre panier</h1>
+  {%- if cart.item_count == 0 -%}
+    <div class="empty-reviews"><p><b>Votre panier est vide.</b></p><p style="margin-top:1rem"><a class="btn btn-primary" href="{{ routes.root_url }}#designs">Voir les designs</a></p></div>
+  {%- else -%}
+    <div class="np-cart-hints">
+      {%- if trio_on -%}
+        <span hidden data-np-trio-cart data-code="{{ trio_code | escape }}" data-want="{% if trio_types == 3 %}1{% else %}0{% endif %}" data-applied="{% if trio_applied %}1{% else %}0{% endif %}" data-others="{{ other_codes | escape }}"></span>
+        {%- if trio_types == 3 -%}
+          <p class="np-cart-hint np-cart-hint-ok">{%- render 'np-icon', name: 'gift', size: 22 -%}<span><b>Trio de Noël :</b> −{{ settings.np_trio_off | money }} pour un mug, une boule et une décoration{% if trio_applied %}, appliqués{% else %}, appliqués au paiement{% endif %}.</span></p>
+        {%- elsif trio_types == 2 -%}
+          {%- liquid
+            if q_mug == 0
+              assign miss = 'un mug'
+              assign miss_url = url_mug
+            elsif q_verre == 0
+              assign miss = 'une boule de Noël'
+              assign miss_url = url_verre
+            else
+              assign miss = 'une décoration en bois'
+              assign miss_url = url_bois
+            endif
+          -%}
+          <p class="np-cart-hint">{%- render 'np-icon', name: 'gift', size: 22 -%}<span>Ajoutez {{ miss }} : avec le trio de Noël, <b>−{{ settings.np_trio_off | money }}</b> sur la commande. <a href="{{ miss_url }}">Personnaliser</a></span></p>
+        {%- endif -%}
+      {%- endif -%}
+      {%- if settings.np_lots_enabled and settings.np_lot_pct > 0 -%}
+        {%- assign q_np = q_mug | plus: q_verre | plus: q_bois -%}
+        {%- if q_np > 0 and q_np < 3 -%}
+          <p class="np-cart-hint">{%- render 'np-icon', name: 'gift', size: 22 -%}<span>Encore {{ 3 | minus: q_np }} article{% if q_np < 2 %}s{% endif %} (mug, boule ou décoration, au choix) : <b>−{{ settings.np_lot_pct }} %</b> sur chaque article dès 3. <a href="{{ url_mug }}">Personnaliser</a></span></p>
+        {%- elsif q_np >= 3 -%}
+          <p class="np-cart-hint np-cart-hint-ok">{%- render 'np-icon', name: 'gift', size: 22 -%}<span><b>3 articles ou plus :</b> −{{ settings.np_lot_pct }} % sur chaque article, appliqués au paiement.</span></p>
+        {%- endif -%}
+      {%- endif -%}
+      <div class="np-ship-goal">
+        {%- if cart.total_price < free_ship -%}
+          {%- assign left = free_ship | minus: cart.total_price -%}
+          {%- assign pct = cart.total_price | times: 100 | divided_by: free_ship -%}
+          <span class="np-ship-line">{%- render 'np-icon', name: 'truck', size: 22 -%}<span>Plus que <b>{{ left | money }}</b> pour la livraison offerte.</span></span>
+          <div class="progress" aria-hidden="true"><span style="width:{{ pct }}%"></span></div>
+        {%- else -%}
+          <span class="np-ship-line">{%- render 'np-icon', name: 'truck', size: 22 -%}<span><b>Livraison offerte</b> pour cette commande.</span></span>
+        {%- endif -%}
+      </div>
+    </div>
+    <form action="{{ routes.cart_url }}" method="post" class="form-card">
+      {%- for item in cart.items -%}
+        {%- liquid
+          capture np_type
+            render 'np-type', product: item.product
+          endcapture
+          assign np_type = np_type | strip
+          # Vignette : l'aperçu rendu par le serveur s'il existe, sinon l'image d'exemple de la variante
+          assign p_gab = item.properties['_gabarit'] | downcase
+          assign p_dest = item.properties['_destinataire']
+          assign p_decl = item.properties['_declinaison'] | default: 'base'
+          assign p_forme = item.properties['_forme'] | default: 'coeur'
+          assign apercu = item.properties['_apercu_url']
+          if np_type == 'bois' and p_forme != 'coeur'
+            assign t = 'np-bois-' | append: p_forme | append: '-vierge-t.jpg'
+          else
+            assign t = 'np-' | append: np_type | append: '-vierge-t.jpg'
+          endif
+          if p_gab == 'a' or p_gab == 'b'
+            if np_type != 'bois' or p_forme == 'coeur'
+              if p_dest != blank
+                assign t = 'np2-ex-' | append: np_type | append: '-' | append: p_gab | append: '-' | append: p_dest | append: '-' | append: p_decl | append: '-s.jpg'
+              endif
+            endif
+          endif
+          assign is_perso = false
+          if item.properties['Titre'] != blank or item.properties['Prénom 1'] != blank or item.properties['Phrase'] != blank or p_gab == 'blanche'
+            assign is_perso = true
+          endif
+        -%}
+        <div class="line-item">
+          <div class="thumb">
+            {%- if np_type != blank -%}
+              {%- if apercu contains 'https://' -%}
+                <img src="{{ apercu | escape }}" alt="{{ item.product.title | escape }}, votre aperçu" width="200" height="200" loading="lazy">
+              {%- else -%}
+                <img src="{{ t | asset_url }}" alt="{{ item.product.title | escape }}" width="200" height="200" loading="lazy">
+              {%- endif -%}
+            {%- elsif item.image -%}
+              {{ item.image | image_url: width: 160 | image_tag: loading: 'lazy', alt: item.product.title }}
+            {%- endif -%}
+          </div>
+          <div class="np-li-main">
+            <h3><a href="{{ item.url }}">{{ item.product.title | escape }}</a></h3>
+            {%- unless item.product.has_only_default_variant -%}
+              {%- for opt in item.options_with_values -%}<p class="pers">{{ opt.name | escape }} : {{ opt.value | escape }}</p>{%- endfor -%}
+            {%- endunless -%}
+            {%- for p in item.properties -%}
+              {%- assign first_char = p.first | slice: 0 -%}
+              {%- if p.last != blank and first_char != '_' and p.first != 'Personnalisation' -%}
+                {%- if p.last contains '/uploads/' -%}
+                  <p class="pers">{{ p.first | escape }} : <a href="{{ p.last }}" target="_blank" rel="noopener">image importée ✓</a></p>
+                {%- else -%}
+                  <p class="pers">{{ p.first | escape }} : {{ p.last | escape }}</p>
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if np_type != blank -%}<p class="np-cart-retract">{% if is_perso %}Article personnalisé : pas de rétractation{% else %}Sans texte : rétractation possible 14 jours après réception{% endif %}</p>{%- endif -%}
+            <label class="sr" for="np-q-{{ forloop.index }}">Quantité</label>
+            <input class="input np-li-qty" type="number" min="0" max="20" id="np-q-{{ forloop.index }}" name="updates[]" value="{{ item.quantity }}">
+          </div>
+          <div class="np-li-price">
+            {%- if item.original_line_price > item.final_line_price -%}<s class="muted">{{ item.original_line_price | money }}</s><br>{%- endif -%}
+            <span class="price">{{ item.final_line_price | money }}</span>
+            {%- for d in item.line_level_discount_allocations -%}<p class="np-cart-disc">{{ d.discount_application.title | escape }} −{{ d.amount | money }}</p>{%- endfor -%}
+            <a class="icon-btn np-li-remove" href="{{ item.url_to_remove }}">Supprimer</a>
+          </div>
+        </div>
+      {%- endfor -%}
+      {%- if cart.total_discount > 0 -%}<div class="row" style="font-size:.95rem; color:var(--green)"><span>Remises</span><span>−{{ cart.total_discount | money }}</span></div>{%- endif -%}
+      <div class="row" style="font-size:1.12rem; border-top:1px solid var(--line); padding-top:.7rem"><b>Sous-total</b><span class="price">{{ cart.total_price | money }}</span></div>
+      <p class="np-tax">Prix TTC · TVA non applicable, art. 293 B du CGI. Livraison calculée à l'étape suivante.</p>
+      <div class="buy-row"><button class="btn btn-ghost" type="submit" name="update">Mettre à jour</button><button class="btn btn-primary" type="submit" name="checkout">Passer commande</button></div>
+      {%- if shop.enabled_payment_types.size > 0 -%}
+        <ul class="np-pay" aria-label="Moyens de paiement acceptés">
+          {%- for type in shop.enabled_payment_types -%}<li>{{ type | payment_type_svg_tag: class: 'np-pay-ico' }}</li>{%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </form>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{ "name": "Panier NolaPrint", "tag": "div" }
+{% endschema %}

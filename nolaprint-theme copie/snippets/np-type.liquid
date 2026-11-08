@@ -1,0 +1,14 @@
+{% doc %}
+  Type d'objet NolaPrint d'un produit, d'après ses tags : mug, verre ou bois (vide sinon).
+
+  @param {object} product - le produit
+{% enddoc %}
+{%- liquid
+  if product.tags contains 'np-mug'
+    echo 'mug'
+  elsif product.tags contains 'np-verre'
+    echo 'verre'
+  elsif product.tags contains 'np-bois'
+    echo 'bois'
+  endif
+-%}

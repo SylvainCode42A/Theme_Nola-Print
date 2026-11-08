@@ -1,0 +1,6 @@
+{
+  "sections": {
+    "main": { "type": "np-main-product", "settings": { "mode_image": true } }
+  },
+  "order": ["main"]
+}

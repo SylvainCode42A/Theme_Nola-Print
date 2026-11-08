@@ -1,0 +1,14 @@
+{
+  "sections": {
+    "main": {
+      "type": "np-page-content",
+      "settings": {
+        "heading": "Suivi de commande",
+        "body": "<p class=\"np-updated\">Dernière mise à jour : 2 novembre 2026</p><p>Chaque article est fabriqué après votre commande dans un atelier partenaire en Europe, puis expédié avec un numéro de suivi. Voici comment suivre votre colis.</p><h2>Votre lien de suivi</h2><p>Dès l'expédition, vous recevez un e-mail « Votre commande est en route » avec le lien de suivi de chaque colis. Le suivi peut mettre jusqu'à 48 heures à s'activer. Vous ne trouvez pas l'e-mail ? Regardez dans vos courriers indésirables ou promotions.</p><p><a class=\"btn btn-primary\" href=\"/account\">Voir ma commande</a></p><p>Ce bouton ouvre votre espace client : entrez l'e-mail utilisé pour la commande, vous recevez un code de connexion, puis vous voyez l'état de chaque commande et ses liens de suivi.</p><h2>Les étapes de votre commande</h2><ul><li><b>Commande confirmée :</b> vous recevez l'e-mail de confirmation juste après le paiement.</li><li><b>Fabrication :</b> environ 2 jours ouvrés ; votre article est imprimé à la commande.</li><li><b>Expédition :</b> vous recevez l'e-mail avec le lien de suivi.</li><li><b>Livraison :</b> 7 à 12 jours ouvrés au total pour un mug ou une décoration en bois, 12 à 32 jours ouvrés pour une boule de Noël en verre.</li></ul><p>Une commande qui réunit plusieurs objets arrive en plusieurs colis, chacun avec son propre lien de suivi.</p><h2>Votre colis n'avance pas ?</h2><p>Si le suivi n'évolue plus depuis 10 jours ouvrés (20 jours ouvrés pour la boule en verre), ou si le colis est indiqué « livré » sans que vous l'ayez reçu après 48 heures, <a href=\"/pages/contact\">écrivez-nous</a> avec votre numéro de commande : nous ouvrons une enquête auprès du transporteur. Si le colis est perdu, nous vous renvoyons l'article gratuitement ou nous vous remboursons, à votre choix.</p><p>Tous les détails sur les délais et les frais sont sur la page <a href=\"/pages/livraison-retours\">Expédition et livraison</a>.</p>"
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}
